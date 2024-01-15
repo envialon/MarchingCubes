@@ -23,11 +23,7 @@ public class Plastimesh : MonoBehaviour
 
     Mesh mesh;
 
-    private bool IsPositionValid(in Vector3 pos)
-    {
-        throw new NotImplementedException();
-    }
-
+ 
     private int CreateTriangles(int index, List<Vector3> vertices)
     {
         throw new NotImplementedException();
