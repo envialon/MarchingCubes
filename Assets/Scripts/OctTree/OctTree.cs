@@ -9,7 +9,7 @@ public class OctTree
     HashSet<Vector3> points;
     int maxDepth;
 
-    OctTree(CubicVolume volume, int depth = 5)
+    public OctTree(CubicVolume volume, int depth = 5)
     {
 
     }
@@ -17,11 +17,11 @@ public class OctTree
     #region private methods    
     private bool IsPositionValid(in Vector3 pos)
     {
-        throw new NotImplementedException();
+        return root.GetVolume().Contains(pos);
     }
     #endregion
 
-    public void Insert( in Vector3 point)
+    public void Insert(in Vector3 point)
     {
         throw new NotImplementedException();
     }
