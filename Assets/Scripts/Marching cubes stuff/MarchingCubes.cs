@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class MarchingCubes : Marcher
@@ -8,32 +9,51 @@ public class MarchingCubes : Marcher
    
 
     Dictionary<Vector3, float> selectedVertices;
-    Mesh mesh;
+    float[,,] values;
 
+    private void InitializeValues()
+    {
+        values = new float[boundSize, boundSize, boundSize];
+        for(int i = 0; i < boundSize; i++)
+        {
+            for(int j = 0; j < boundSize; j++)
+            {
+                for(int k = 0; k < boundSize; k++)
+                {
+                    values[i, j, k] = UnityEngine.Random.Range(0, 1);
+                }
+            }
+        }   
+    }
 
     protected override void Initialize()
     {
         base.Initialize();
+        InitializeValues();
+        selectedVertices = new Dictionary<Vector3, float>(); 
     }
 
 
     void Start()
     {
-
+        Initialize();
     }
-    public void AddSelectedVertex(Vector3 pos, float value)
+
+    public override void AddSelectedVertex(in Vector3 pos)
     {
-        if (IsPositionValid(pos))
+        if ((IsPositionValid(pos) && !selectedVertices.ContainsKey(pos)))
         {
-            selectedVertices.Add(pos, value);
+            selectedVertices.Add(pos, values[(int)pos.x, (int)pos.y, (int)pos.z]);
+            March();
         }
     }
 
-    public void RemoveSelectedVertex(Vector3 pos)
+    public override void RemoveSelectedVertex(in Vector3 pos)
     {
         if (IsPositionValid(pos))
         {
             selectedVertices.Remove(pos);
+            March();
         }
     }
 
@@ -42,10 +62,10 @@ public class MarchingCubes : Marcher
         meshVerticesIndices.Clear();
         meshVertices.Clear(); 
         meshTriangles.Clear();
-        mesh.Clear();
 
         Vector3[] window = new Vector3[8];
-        float[] values = new float[8];
+        float[] valueWindow = new float[8];   
+        
         for (float i = 0; i < boundSize; i += resolution)
         {
             for (float j = 0; j < boundSize; j += resolution)
@@ -60,17 +80,21 @@ public class MarchingCubes : Marcher
                     window[5] = new Vector3(i + resolution, j, k + resolution);
                     window[6] = new Vector3(i + resolution, j + resolution, k + resolution);
                     window[7] = new Vector3(i, j + resolution, k + resolution);
-                    Poligonize(window, values);
+                    
+                    for(int h = 0; h < 8; h++)
+                    {
+                        valueWindow[h] = values[(int)window[h].x % boundSize, (int)window[h].y % boundSize, (int)window[h].z % boundSize];
+                    }
+                    
+                    Poligonize(window, valueWindow);
                 }
             }
-            mesh.vertices = meshVertices.ToArray();
-            mesh.triangles = meshTriangles.ToArray();
-            mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
-
-
         }
-
+        mesh.vertices = meshVertices.ToArray();
+        mesh.triangles = meshTriangles.ToArray();
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        meshFilter.mesh = mesh;
     }
 
     protected override bool VertexIsSelected(in Vector3 pos)

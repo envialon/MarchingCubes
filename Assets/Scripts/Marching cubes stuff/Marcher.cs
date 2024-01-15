@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,6 +14,7 @@ public abstract class Marcher : MonoBehaviour
         Smoothstep,
     }
 
+    protected MeshCollider meshCollider;
     #region MeshAttributes
     protected Dictionary<Vector3, int> meshVerticesIndices;
     protected List<Vector3> meshVertices;
@@ -21,7 +23,7 @@ public abstract class Marcher : MonoBehaviour
 
     protected MeshFilter meshFilter;
     protected MeshRenderer meshRenderer;
-    Mesh mesh;
+    protected Mesh mesh;
     #endregion
 
     public int boundSize;
@@ -38,10 +40,18 @@ public abstract class Marcher : MonoBehaviour
 
     protected virtual void Initialize()
     {
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
-        MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+        meshCollider = this.gameObject.AddComponent<MeshCollider>();
+        meshFilter = GetComponent<MeshFilter>();
+        meshRenderer = GetComponent<MeshRenderer>();
         mesh = new Mesh { name = "Procedural mesh (Plastimesh)" };
         meshFilter.mesh = mesh;
+
+        meshVerticesIndices = new Dictionary<Vector3, int>();
+        meshVertices = new List<Vector3>();
+        meshTriangles = new List<int>();
+
+        ClickOnScene.OnClickOnScene += ReactToClick;
+
     }
 
     #region Interpolation 
@@ -70,7 +80,24 @@ public abstract class Marcher : MonoBehaviour
     }
     #endregion
 
-    protected Vector3 GetEdgeVertex(Vector3 v1, Vector3 v2, float f1, float f2)
+    private void ReactToClick(object sender, EventArgs e)
+    {
+        Debug.Log("Reacting to click");
+        ClickEventArgs clickEventArgs = (ClickEventArgs)e;
+        if (clickEventArgs.clickType == ClickEventArgs.ClickType.LeftClick)
+        {
+            AddSelectedVertex(clickEventArgs.pos);
+        }
+        else if (clickEventArgs.clickType == ClickEventArgs.ClickType.RightClick)
+        {
+            RemoveSelectedVertex(clickEventArgs.pos);
+        }
+    }
+
+    public abstract void AddSelectedVertex(in Vector3 pos);
+    public abstract void RemoveSelectedVertex(in Vector3 pos);
+
+    protected Vector3 GetEdgeVertex(in Vector3 v1,in  Vector3 v2, float f1, float f2)
     {
         switch (interpolationMethod)
         {
@@ -85,7 +112,7 @@ public abstract class Marcher : MonoBehaviour
         }
     }
 
-    protected int Poligonize(Vector3[] squareCorners, float[] cornerValues)
+    protected int Poligonize(in Vector3[] squareCorners,in float[] cornerValues)
     {
         Vector3[] edgeVertices = new Vector3[12];
 
@@ -100,7 +127,7 @@ public abstract class Marcher : MonoBehaviour
         if (VertexIsSelected(squareCorners[7])) { configurationIndex |= 128; }
 
         // Its either full or empty
-        if (TriangulationLookupTable.GetEdgeTable(configurationIndex) != 0)
+        if (TriangulationLookupTable.GetEdgeTable(configurationIndex) == 0)
         {
             return 0;
         }
@@ -155,17 +182,14 @@ public abstract class Marcher : MonoBehaviour
         }
         return CreateTriangles(configurationIndex, edgeVertices);
     }
-    protected int CreateTriangles(int index, Vector3[] vertices)
+
+    protected int CreateTriangles(int index,in Vector3[] vertices)
     {
         //int offset = meshVertices.Count();
         int numberOfTriangles = 0;
         ;
         for (int i = 0; TriangulationLookupTable.GetTriTable(index, i) != -1; i += 3)
         {
-            /*
-            meshTriangles.Add(lookupTable.triTable[index][i] +offset);
-            meshTriangles.Add(lookupTable.triTable[index][i + 1] + offset);
-            meshTriangles.Add(lookupTable.triTable[index][i + 2]+offset);*/
 
             int index1 = TriangulationLookupTable.GetTriTable(index, i);
             int index2 = TriangulationLookupTable.GetTriTable(index, i + 1);
@@ -186,14 +210,12 @@ public abstract class Marcher : MonoBehaviour
                 meshVertices.Add(vertices[index3]);
                 meshVerticesIndices.Add(vertices[index3], meshVertices.Count() - 1);
             }
-            meshTriangles.Add(meshVerticesIndices[vertices[index1]]);
-            meshTriangles.Add(meshVerticesIndices[vertices[index2]]);
             meshTriangles.Add(meshVerticesIndices[vertices[index3]]);
-
+            meshTriangles.Add(meshVerticesIndices[vertices[index2]]);
+            meshTriangles.Add(meshVerticesIndices[vertices[index1]]);
 
             numberOfTriangles++;
         }
-        //offset = meshTriangles.Count();
         return numberOfTriangles;
     }
 

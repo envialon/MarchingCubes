@@ -22,16 +22,16 @@ public class MarchingOctTree : Marcher
 
     public void MarchOctTree() { throw new NotImplementedException(); }
 
-    public void AddSelectedVertex(Vector3 pos, float value)
+    public override void AddSelectedVertex(in Vector3 pos)
     {
-        if (IsPositionValid(pos))
+        if (IsPositionValid(pos) && !selectedVertices.ContainsKey(pos))
         {
-            selectedVertices.Add(pos, value);
+           // selectedVertices.Add(pos, value[]);
             octTree.Insert(pos);
         }
     }
 
-    public void RemoveSelectedVertex(Vector3 pos)
+    public override void RemoveSelectedVertex(in  Vector3 pos)
     {
         if (IsPositionValid(pos))
         {
@@ -49,4 +49,5 @@ public class MarchingOctTree : Marcher
     {
         throw new NotImplementedException();
     }
+  
 }
