@@ -148,35 +148,35 @@ public abstract class Marcher : MonoBehaviour
         {
             edgeVertices[3] = GetEdgeVertex(squareCorners[3], squareCorners[0], cornerValues[3], cornerValues[0]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 1) != 06)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 16) != 0)
         {
             edgeVertices[4] = GetEdgeVertex(squareCorners[4], squareCorners[5], cornerValues[4], cornerValues[5]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 3) != 02)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 32) != 0)
         {
             edgeVertices[5] = GetEdgeVertex(squareCorners[5], squareCorners[6], cornerValues[5], cornerValues[6]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 6) != 04)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 64) != 0)
         {
             edgeVertices[6] = GetEdgeVertex(squareCorners[6], squareCorners[7], cornerValues[6], cornerValues[7]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 1) != 028)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 128) != 00)
         {
             edgeVertices[7] = GetEdgeVertex(squareCorners[7], squareCorners[4], cornerValues[7], cornerValues[4]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 2) != 056)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 256) != 0)
         {
             edgeVertices[8] = GetEdgeVertex(squareCorners[0], squareCorners[4], cornerValues[0], cornerValues[4]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 5) != 012)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 512) != 0)
         {
             edgeVertices[9] = GetEdgeVertex(squareCorners[1], squareCorners[5], cornerValues[1], cornerValues[5]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 1) != 0024)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 1024) != 0)
         {
             edgeVertices[10] = GetEdgeVertex(squareCorners[2], squareCorners[6], cornerValues[2], cornerValues[6]);
         }
-        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 2) != 0048)
+        if ((TriangulationLookupTable.GetEdgeTable(configurationIndex) & 2048) != 0)
         {
             edgeVertices[11] = GetEdgeVertex(squareCorners[3], squareCorners[7], cornerValues[3], cornerValues[7]);
         }

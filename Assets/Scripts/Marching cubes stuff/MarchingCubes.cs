@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class MarchingCubes : Marcher
 {
@@ -83,6 +84,7 @@ public class MarchingCubes : Marcher
                     
                     for(int h = 0; h < 8; h++)
                     {
+                        //this wont work with resolutions other than 1
                         valueWindow[h] = values[(int)window[h].x % boundSize, (int)window[h].y % boundSize, (int)window[h].z % boundSize];
                     }
                     
