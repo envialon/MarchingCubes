@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class ClickEventArgs : EventArgs
 {
     public enum ClickType

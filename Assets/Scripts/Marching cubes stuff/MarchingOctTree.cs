@@ -49,5 +49,9 @@ public class MarchingOctTree : Marcher
     {
         throw new NotImplementedException();
     }
-  
+
+    protected override int GenerateConfigurationIndexFromWindow(in Vector3[] window)
+    {
+        throw new NotImplementedException();
+    }
 }

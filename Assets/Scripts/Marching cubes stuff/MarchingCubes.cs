@@ -2,11 +2,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
+using Unity.Burst;
 
 public class MarchingCubes : Marcher
 {
-
-
     Dictionary<Vector3, float> selectedVertices;
     float[,,] values;
 
@@ -66,7 +65,6 @@ public class MarchingCubes : Marcher
         Vector3[] window = new Vector3[8];
         float[] valueWindow = new float[8];
 
-
         Stopwatch sw = new Stopwatch();
         sw.Start();
         for (float i = 0; i < boundSize; i += resolution)
@@ -84,6 +82,7 @@ public class MarchingCubes : Marcher
                     window[6] = new Vector3(i + resolution, j + resolution, k + resolution);
                     window[7] = new Vector3(i, j + resolution, k + resolution);
 
+                    valueWindow[0] = values[0, 0, 0];
                     valueWindow[1] = values[0, 0, 0];
                     valueWindow[2] = values[0, 0, 0];
                     valueWindow[3] = values[0, 0, 0];
@@ -91,22 +90,36 @@ public class MarchingCubes : Marcher
                     valueWindow[5] = values[0, 0, 0];
                     valueWindow[6] = values[0, 0, 0];
                     valueWindow[7] = values[0, 0, 0];
-                    valueWindow[0] = values[0, 0, 0];
 
-                    Poligonize(window, valueWindow);
+                    Poligonize(GenerateConfigurationIndexFromWindow(window), window, valueWindow, interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
                 }
             }
         }
         sw.Stop();
         UnityEngine.Debug.Log("Marching cubes took " + sw.ElapsedMilliseconds + " ms");
+
         mesh.vertices = meshVertices.ToArray();
         mesh.triangles = meshTriangles.ToArray();
         mesh.RecalculateNormals();
-        mesh.RecalculateBounds();        
+        mesh.RecalculateBounds();
     }
 
     protected override bool VertexIsSelected(in Vector3 pos)
     {
         return selectedVertices.ContainsKey(pos);
+    }
+
+    protected override int GenerateConfigurationIndexFromWindow(in Vector3[] window)
+    {
+        int configurationIndex = 0;
+        if (VertexIsSelected(window[0])) { configurationIndex |= 1; }
+        if (VertexIsSelected(window[1])) { configurationIndex |= 2; }
+        if (VertexIsSelected(window[2])) { configurationIndex |= 4; }
+        if (VertexIsSelected(window[3])) { configurationIndex |= 8; }
+        if (VertexIsSelected(window[4])) { configurationIndex |= 16; }
+        if (VertexIsSelected(window[5])) { configurationIndex |= 32; }
+        if (VertexIsSelected(window[6])) { configurationIndex |= 64; }
+        if (VertexIsSelected(window[7])) { configurationIndex |= 128; }
+        return configurationIndex;
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -55,12 +56,12 @@ public abstract class Marcher : MonoBehaviour
     }
 
     #region Interpolation 
-    protected Vector3 GetHalfPoint(Vector3 v1, Vector3 v2)
+    protected static Vector3 GetHalfPoint(Vector3 v1, Vector3 v2)
     {
         return v1 + (v2 - v1) * 0.5f;
     }
 
-    protected Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2)
+    protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
     {
         float t = (interpolationThreshold - f1) / (f2 - f1);
         t = t * t * (3 - 2 * t);
@@ -71,7 +72,7 @@ public abstract class Marcher : MonoBehaviour
         );
     }
 
-    protected Vector3 GetLinealInterpolation(Vector3 v1, Vector3 v2, float f1, float f2)
+    protected static Vector3 GetLinealInterpolation(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
     {
         float t = (interpolationThreshold - f1) / (f2 - f1);
         return new Vector3(v1.x + t * (v2.x - v1.x),
@@ -82,7 +83,7 @@ public abstract class Marcher : MonoBehaviour
 
     private void ReactToClick(object sender, EventArgs e)
     {
-       // Debug.Log("Reacting to click");
+        // Debug.Log("Reacting to click");
         ClickEventArgs clickEventArgs = (ClickEventArgs)e;
         if (clickEventArgs.clickType == ClickEventArgs.ClickType.LeftClick)
         {
@@ -94,37 +95,37 @@ public abstract class Marcher : MonoBehaviour
         }
     }
 
+    protected abstract int GenerateConfigurationIndexFromWindow(in Vector3[] window);
+
     public abstract void AddSelectedVertex(in Vector3 pos);
     public abstract void RemoveSelectedVertex(in Vector3 pos);
 
-    protected Vector3 GetEdgeVertex(in Vector3 v1,in  Vector3 v2, float f1, float f2)
+    protected static Vector3 GetEdgeVertex(in Vector3 v1, in Vector3 v2, float f1, float f2, float interpolationThreshold, InterpolationMethod interpolationMethod)
     {
         switch (interpolationMethod)
         {
             case InterpolationMethod.HalfPoint:
                 return GetHalfPoint(v1, v2);
             case InterpolationMethod.Linear:
-                return GetLinealInterpolation(v1, v2, f1, f2);
+                return GetLinealInterpolation(v1, v2, f1, f2, interpolationThreshold);
             case InterpolationMethod.Smoothstep:
-                return GetSmoothstep(v1, v2, f1, f2);
+                return GetSmoothstep(v1, v2, f1, f2, interpolationThreshold);
             default:
                 return GetHalfPoint(v1, v2);
         }
     }
 
-    protected int Poligonize(in Vector3[] squareCorners,in float[] cornerValues)
+
+
+
+
+    protected static int Poligonize(int configurationIndex, in Vector3[] window, in float[] cornerValues,
+                                    float interpolationThreshold, InterpolationMethod interpolationMethod,
+                                    ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         Vector3[] edgeVertices = new Vector3[12];
 
-        int configurationIndex = 0;
-        if (VertexIsSelected(squareCorners[0])) { configurationIndex |= 1; }
-        if (VertexIsSelected(squareCorners[1])) { configurationIndex |= 2; }
-        if (VertexIsSelected(squareCorners[2])) { configurationIndex |= 4; }
-        if (VertexIsSelected(squareCorners[3])) { configurationIndex |= 8; }
-        if (VertexIsSelected(squareCorners[4])) { configurationIndex |= 16; }
-        if (VertexIsSelected(squareCorners[5])) { configurationIndex |= 32; }
-        if (VertexIsSelected(squareCorners[6])) { configurationIndex |= 64; }
-        if (VertexIsSelected(squareCorners[7])) { configurationIndex |= 128; }
+
 
         int edgeIndex = TriangulationLookupTable.edgeTable[configurationIndex];
 
@@ -132,70 +133,70 @@ public abstract class Marcher : MonoBehaviour
         if (edgeIndex == 0)
         {
             return 0;
-        }       
+        }
 
         if ((edgeIndex & 1) != 0)
         {
-            edgeVertices[0] = GetEdgeVertex(squareCorners[0], squareCorners[1], cornerValues[0], cornerValues[1]);
+            edgeVertices[0] = GetEdgeVertex(window[0], window[1], cornerValues[0], cornerValues[1], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 2) != 0)
         {
-            edgeVertices[1] = GetEdgeVertex(squareCorners[1], squareCorners[2], cornerValues[1], cornerValues[2]);
+            edgeVertices[1] = GetEdgeVertex(window[1], window[2], cornerValues[1], cornerValues[2], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 4) != 0)
         {
-            edgeVertices[2] = GetEdgeVertex(squareCorners[2], squareCorners[3], cornerValues[2], cornerValues[3]);
+            edgeVertices[2] = GetEdgeVertex(window[2], window[3], cornerValues[2], cornerValues[3], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 8) != 0)
         {
-            edgeVertices[3] = GetEdgeVertex(squareCorners[3], squareCorners[0], cornerValues[3], cornerValues[0]);
+            edgeVertices[3] = GetEdgeVertex(window[3], window[0], cornerValues[3], cornerValues[0], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 16) != 0)
         {
-            edgeVertices[4] = GetEdgeVertex(squareCorners[4], squareCorners[5], cornerValues[4], cornerValues[5]);
+            edgeVertices[4] = GetEdgeVertex(window[4], window[5], cornerValues[4], cornerValues[5], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 32) != 0)
         {
-            edgeVertices[5] = GetEdgeVertex(squareCorners[5], squareCorners[6], cornerValues[5], cornerValues[6]);
+            edgeVertices[5] = GetEdgeVertex(window[5], window[6], cornerValues[5], cornerValues[6], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 64) != 0)
         {
-            edgeVertices[6] = GetEdgeVertex(squareCorners[6], squareCorners[7], cornerValues[6], cornerValues[7]);
+            edgeVertices[6] = GetEdgeVertex(window[6], window[7], cornerValues[6], cornerValues[7], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 128) != 0)
         {
-            edgeVertices[7] = GetEdgeVertex(squareCorners[7], squareCorners[4], cornerValues[7], cornerValues[4]);
+            edgeVertices[7] = GetEdgeVertex(window[7], window[4], cornerValues[7], cornerValues[4], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 256) != 0)
         {
-            edgeVertices[8] = GetEdgeVertex(squareCorners[0], squareCorners[4], cornerValues[0], cornerValues[4]);
+            edgeVertices[8] = GetEdgeVertex(window[0], window[4], cornerValues[0], cornerValues[4], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 512) != 0)
         {
-            edgeVertices[9] = GetEdgeVertex(squareCorners[1], squareCorners[5], cornerValues[1], cornerValues[5]);
+            edgeVertices[9] = GetEdgeVertex(window[1], window[5], cornerValues[1], cornerValues[5], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 1024) != 0)
         {
-            edgeVertices[10] = GetEdgeVertex(squareCorners[2], squareCorners[6], cornerValues[2], cornerValues[6]);
+            edgeVertices[10] = GetEdgeVertex(window[2], window[6], cornerValues[2], cornerValues[6], interpolationThreshold, interpolationMethod);
         }
         if ((edgeIndex & 2048) != 0)
         {
-            edgeVertices[11] = GetEdgeVertex(squareCorners[3], squareCorners[7], cornerValues[3], cornerValues[7]);
+            edgeVertices[11] = GetEdgeVertex(window[3], window[7], cornerValues[3], cornerValues[7], interpolationThreshold, interpolationMethod);
         }
-        return CreateTriangles(configurationIndex, edgeVertices);
+        return CreateTriangles(configurationIndex, edgeVertices, meshVertices, meshVerticesIndices, meshTriangles);
     }
 
-    protected int CreateTriangles(int index,in Vector3[] vertices)
+    protected static int CreateTriangles(int index, in Vector3[] vertices, List<Vector3> meshVertices, Dictionary<Vector3, int> meshVerticesIndices, List<int> meshTriangles)
     {
         //int offset = meshVertices.Count();
         int numberOfTriangles = 0;
         ;
-        for (int i = 0; TriangulationLookupTable.triTable[index, i] != -1; i += 3)
+        for (int i = 0; TriangulationLookupTable.GetTriTable(index, i) != -1; i += 3)
         {
 
-            int index1 = TriangulationLookupTable.triTable[index, i];
-            int index2 = TriangulationLookupTable.triTable[index, i + 1];
-            int index3 = TriangulationLookupTable.triTable[index, i + 2];
+            int index1 = TriangulationLookupTable.GetTriTable(index, i);
+            int index2 = TriangulationLookupTable.GetTriTable(index, i + 1);
+            int index3 = TriangulationLookupTable.GetTriTable(index, i + 2);
 
             if (!meshVerticesIndices.ContainsKey(vertices[index1]))
             {
