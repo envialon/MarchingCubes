@@ -61,9 +61,12 @@ public class MarchingCubes : Marcher
         meshVerticesIndices.Clear();
         meshVertices.Clear();
         meshTriangles.Clear();
+        mesh.Clear();
 
         Vector3[] window = new Vector3[8];
         float[] valueWindow = new float[8];
+
+
         Stopwatch sw = new Stopwatch();
         sw.Start();
         for (float i = 0; i < boundSize; i += resolution)
@@ -81,11 +84,14 @@ public class MarchingCubes : Marcher
                     window[6] = new Vector3(i + resolution, j + resolution, k + resolution);
                     window[7] = new Vector3(i, j + resolution, k + resolution);
 
-                    for (int h = 0; h < 8; h++)
-                    {
-                        //this wont work with resolutions other than 1
-                        valueWindow[h] = values[0,0,0];
-                    }
+                    valueWindow[1] = values[0, 0, 0];
+                    valueWindow[2] = values[0, 0, 0];
+                    valueWindow[3] = values[0, 0, 0];
+                    valueWindow[4] = values[0, 0, 0];
+                    valueWindow[5] = values[0, 0, 0];
+                    valueWindow[6] = values[0, 0, 0];
+                    valueWindow[7] = values[0, 0, 0];
+                    valueWindow[0] = values[0, 0, 0];
 
                     Poligonize(window, valueWindow);
                 }
@@ -96,9 +102,7 @@ public class MarchingCubes : Marcher
         mesh.vertices = meshVertices.ToArray();
         mesh.triangles = meshTriangles.ToArray();
         mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
-        meshFilter.mesh = mesh;
-        
+        mesh.RecalculateBounds();        
     }
 
     protected override bool VertexIsSelected(in Vector3 pos)

@@ -49,9 +49,9 @@ public class ClickOnScene : MonoBehaviour
             RaycastHit hit;
             if(Physics.Raycast(ray, out hit))
             {
-                Vector3Int pos = Vector3Int.RoundToInt(hit.point + new Vector3(0,0.2f, 0));
+                Vector3Int pos = Vector3Int.RoundToInt(hit.point + new Vector3(0,.4f, 0));
                 OnClickOnScene?.Invoke(this, new ClickEventArgs(pos, type));
-                Debug.Log("Clicked on " + pos);
+             //   Debug.Log("Clicked on " + pos);
               
             }
         }

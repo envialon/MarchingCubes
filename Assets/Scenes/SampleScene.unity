@@ -474,7 +474,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd3c7e9be7e99464fbd627b54dc5c61b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boundSize: 100
+  boundSize: 50
   resolution: 1
   interpolationThreshold: 0.2
   interpolationMethod: 0

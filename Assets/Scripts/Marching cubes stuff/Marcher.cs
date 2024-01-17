@@ -82,7 +82,7 @@ public abstract class Marcher : MonoBehaviour
 
     private void ReactToClick(object sender, EventArgs e)
     {
-        Debug.Log("Reacting to click");
+       // Debug.Log("Reacting to click");
         ClickEventArgs clickEventArgs = (ClickEventArgs)e;
         if (clickEventArgs.clickType == ClickEventArgs.ClickType.LeftClick)
         {
@@ -126,57 +126,59 @@ public abstract class Marcher : MonoBehaviour
         if (VertexIsSelected(squareCorners[6])) { configurationIndex |= 64; }
         if (VertexIsSelected(squareCorners[7])) { configurationIndex |= 128; }
 
+        int edgeIndex = TriangulationLookupTable.edgeTable[configurationIndex];
+
         // Its either full or empty
-        if (TriangulationLookupTable.edgeTable[configurationIndex] == 0)
+        if (edgeIndex == 0)
         {
             return 0;
-        }
+        }       
 
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 1) != 0)
+        if ((edgeIndex & 1) != 0)
         {
             edgeVertices[0] = GetEdgeVertex(squareCorners[0], squareCorners[1], cornerValues[0], cornerValues[1]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 2) != 0)
+        if ((edgeIndex & 2) != 0)
         {
             edgeVertices[1] = GetEdgeVertex(squareCorners[1], squareCorners[2], cornerValues[1], cornerValues[2]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 4) != 0)
+        if ((edgeIndex & 4) != 0)
         {
             edgeVertices[2] = GetEdgeVertex(squareCorners[2], squareCorners[3], cornerValues[2], cornerValues[3]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 8) != 0)
+        if ((edgeIndex & 8) != 0)
         {
             edgeVertices[3] = GetEdgeVertex(squareCorners[3], squareCorners[0], cornerValues[3], cornerValues[0]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 16) != 0)
+        if ((edgeIndex & 16) != 0)
         {
             edgeVertices[4] = GetEdgeVertex(squareCorners[4], squareCorners[5], cornerValues[4], cornerValues[5]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 32) != 0)
+        if ((edgeIndex & 32) != 0)
         {
             edgeVertices[5] = GetEdgeVertex(squareCorners[5], squareCorners[6], cornerValues[5], cornerValues[6]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 64) != 0)
+        if ((edgeIndex & 64) != 0)
         {
             edgeVertices[6] = GetEdgeVertex(squareCorners[6], squareCorners[7], cornerValues[6], cornerValues[7]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 128) != 00)
+        if ((edgeIndex & 128) != 0)
         {
             edgeVertices[7] = GetEdgeVertex(squareCorners[7], squareCorners[4], cornerValues[7], cornerValues[4]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 256) != 0)
+        if ((edgeIndex & 256) != 0)
         {
             edgeVertices[8] = GetEdgeVertex(squareCorners[0], squareCorners[4], cornerValues[0], cornerValues[4]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 512) != 0)
+        if ((edgeIndex & 512) != 0)
         {
             edgeVertices[9] = GetEdgeVertex(squareCorners[1], squareCorners[5], cornerValues[1], cornerValues[5]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 1024) != 0)
+        if ((edgeIndex & 1024) != 0)
         {
             edgeVertices[10] = GetEdgeVertex(squareCorners[2], squareCorners[6], cornerValues[2], cornerValues[6]);
         }
-        if ((TriangulationLookupTable.edgeTable[configurationIndex] & 2048) != 0)
+        if ((edgeIndex & 2048) != 0)
         {
             edgeVertices[11] = GetEdgeVertex(squareCorners[3], squareCorners[7], cornerValues[3], cornerValues[7]);
         }
