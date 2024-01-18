@@ -60,11 +60,15 @@ public abstract class Marcher : MonoBehaviour
     }
 
     #region Interpolation 
+
+    [BurstCompile]
     protected static Vector3 GetHalfPoint(Vector3 v1, Vector3 v2)
     {
         return v1 + (v2 - v1) * 0.5f;
     }
 
+
+    [BurstCompile]
     protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
     {
         float t = (interpolationThreshold - f1) / (f2 - f1);
@@ -76,6 +80,7 @@ public abstract class Marcher : MonoBehaviour
         );
     }
 
+    [BurstCompile]
     protected static Vector3 GetLinealInterpolation(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
     {
         float t = (interpolationThreshold - f1) / (f2 - f1);
@@ -104,6 +109,7 @@ public abstract class Marcher : MonoBehaviour
     public abstract void AddSelectedVertex(in Vector3 pos);
     public abstract void RemoveSelectedVertex(in Vector3 pos);
 
+    [BurstCompile]
     protected static Vector3 GetEdgeVertex(in Vector3 v1, in Vector3 v2, float f1, float f2, float interpolationThreshold, InterpolationMethod interpolationMethod)
     {
         switch (interpolationMethod)
@@ -123,6 +129,7 @@ public abstract class Marcher : MonoBehaviour
 
 
 
+    [BurstCompile]
     protected static int Poligonize(int configurationIndex, in Vector3[] window, in float[] cornerValues,
                                     float interpolationThreshold, InterpolationMethod interpolationMethod,
                                     ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
@@ -190,6 +197,7 @@ public abstract class Marcher : MonoBehaviour
         return CreateTriangles(configurationIndex, edgeVertices, meshVertices, meshVerticesIndices, meshTriangles);
     }
 
+    [BurstCompile]
     protected static int CreateTriangles(int index, in Vector3[] vertices, List<Vector3> meshVertices, Dictionary<Vector3, int> meshVerticesIndices, List<int> meshTriangles)
     {
         //int offset = meshVertices.Count();
