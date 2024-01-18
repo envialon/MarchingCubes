@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
+using Unity.Burst;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public abstract class Marcher : MonoBehaviour
