@@ -25,6 +25,7 @@ public abstract class Marcher : MonoBehaviour
     protected MeshFilter meshFilter;
     protected MeshRenderer meshRenderer;
     protected Mesh mesh;
+    public Material material;
     #endregion
 
     public int boundSize;
@@ -44,6 +45,9 @@ public abstract class Marcher : MonoBehaviour
         meshCollider = this.gameObject.AddComponent<MeshCollider>();
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
+
+        meshRenderer.material = material;
+
         mesh = new Mesh { name = "Procedural mesh (Plastimesh)" };
         meshFilter.mesh = mesh;
 
@@ -52,7 +56,6 @@ public abstract class Marcher : MonoBehaviour
         meshTriangles = new List<int>();
 
         ClickOnScene.OnClickOnScene += ReactToClick;
-
     }
 
     #region Interpolation 

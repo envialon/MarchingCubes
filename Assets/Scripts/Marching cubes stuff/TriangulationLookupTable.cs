@@ -3,8 +3,7 @@ using System.Collections;
 using Unity.Collections;
 using Unity.VisualScripting;
 public struct TriangulationLookupTable
-{
-    public static NativeArray<int> edgeTable = new NativeArray<int>(eT, Allocator.Persistent);
+{ 
     private static int[] eT= {
  0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
  0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
@@ -39,10 +38,9 @@ public struct TriangulationLookupTable
  0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c,
  0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0 };
 
-    public static NativeArray<int> triangleTable = new NativeArray<int>(tT, Allocator.Persistent);
     public static int GetTriTable(int i1, int i2)
     {
-        return triangleTable[i1 * 256 + i2];
+        return triangleTable[i1 * 16 + i2];
     }
     private static int[] tT = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
  0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -302,5 +300,7 @@ public struct TriangulationLookupTable
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     };
 
+    public static NativeArray<int> edgeTable = new NativeArray<int>(eT, Allocator.Persistent);
+    public static NativeArray<int> triangleTable = new NativeArray<int>(tT, Allocator.Persistent);
 
 }
