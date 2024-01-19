@@ -439,7 +439,7 @@ GameObject:
   - component: {fileID: 2039201032}
   - component: {fileID: 2039201035}
   - component: {fileID: 2039201034}
-  - component: {fileID: 2039201033}
+  - component: {fileID: 2039201036}
   m_Layer: 0
   m_Name: MarchingCubes
   m_TagString: Untagged
@@ -462,23 +462,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2039201033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2039201031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd3c7e9be7e99464fbd627b54dc5c61b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: d2a263cad134c8d4498b9446d584e95b, type: 2}
-  boundSize: 100
-  resolution: 1
-  interpolationThreshold: 0.2
-  interpolationMethod: 0
 --- !u!23 &2039201034
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -529,6 +512,25 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2039201031}
   m_Mesh: {fileID: 0}
+--- !u!114 &2039201036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2039201031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e731e0435464d7419aaea66da5a6e8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: d2a263cad134c8d4498b9446d584e95b, type: 2}
+  marchingMethod: 0
+  interpolationMethod: 0
+  boundSize: 10
+  resolution: 1
+  valueThreshold: 0.5
+  interpolationThreshold: 0.2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

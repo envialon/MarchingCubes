@@ -1,13 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 using Unity.Burst;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public abstract class Marcher : MonoBehaviour
+public abstract class Marcher
 {
+
+    public struct ProceduralMeshInfo
+    {
+        public Vector3[] meshVertices;
+        public int[] meshTriangles;
+
+        public ProceduralMeshInfo(List<Vector3> meshVertices, List<int> meshTriangles)
+        {
+            this.meshVertices = meshVertices.ToArray();
+            this.meshTriangles = meshTriangles.ToArray();
+        }
+    }
 
     public enum InterpolationMethod
     {
@@ -16,17 +26,10 @@ public abstract class Marcher : MonoBehaviour
         Smoothstep,
     }
 
-    protected MeshCollider meshCollider;
     #region MeshAttributes
     protected Dictionary<Vector3, int> meshVerticesIndices;
-    protected List<Vector3> meshVertices;
-    protected List<int> meshTriangles;
-
-
-    protected MeshFilter meshFilter;
-    protected MeshRenderer meshRenderer;
-    protected Mesh mesh;
-    public Material material;
+    public List<Vector3> meshVertices;
+    public List<int> meshTriangles;
     #endregion
 
     public int boundSize;
@@ -34,29 +37,28 @@ public abstract class Marcher : MonoBehaviour
     public float interpolationThreshold;
     public InterpolationMethod interpolationMethod;
 
-    protected abstract bool VertexIsSelected(in Vector3 pos);
-
-    protected bool IsPositionValid(in Vector3 pos)
+    [BurstCompile]
+    protected static bool IsPositionValid(in Vector3 pos, int boundSize)
     {
-        return pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize;
+        bool output = pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize && pos.z >= 0 && pos.z < boundSize;
+        return output;
+    }
+
+    public Marcher(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method)
+    {
+        Initialize();
+        this.boundSize = boundSize;
+        this.resolution = resolution;
+        this.interpolationThreshold = interpolationThreshold;
+        this.interpolationMethod = method;
+
     }
 
     protected virtual void Initialize()
     {
-        meshCollider = this.gameObject.AddComponent<MeshCollider>();
-        meshFilter = GetComponent<MeshFilter>();
-        meshRenderer = GetComponent<MeshRenderer>();
-
-        meshRenderer.material = material;
-
-        mesh = new Mesh { name = "Procedural mesh (Plastimesh)" };
-        meshFilter.mesh = mesh;
-
         meshVerticesIndices = new Dictionary<Vector3, int>();
         meshVertices = new List<Vector3>();
         meshTriangles = new List<int>();
-
-        ClickOnScene.OnClickOnScene += ReactToClick;
     }
 
     #region Interpolation 
@@ -66,7 +68,6 @@ public abstract class Marcher : MonoBehaviour
     {
         return v1 + (v2 - v1) * 0.5f;
     }
-
 
     [BurstCompile]
     protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
@@ -104,7 +105,6 @@ public abstract class Marcher : MonoBehaviour
         }
     }
 
-    protected abstract int GenerateConfigurationIndexFromWindow(in Vector3[] window);
 
     public abstract void AddSelectedVertex(in Vector3 pos);
     public abstract void RemoveSelectedVertex(in Vector3 pos);
@@ -125,18 +125,12 @@ public abstract class Marcher : MonoBehaviour
         }
     }
 
-
-
-
-
     [BurstCompile]
     protected static int Poligonize(int configurationIndex, in Vector3[] window, in float[] cornerValues,
                                     float interpolationThreshold, InterpolationMethod interpolationMethod,
                                     ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         Vector3[] edgeVertices = new Vector3[12];
-
-
 
         int edgeIndex = TriangulationLookupTable.edgeTable[configurationIndex];
 
@@ -234,6 +228,5 @@ public abstract class Marcher : MonoBehaviour
         return numberOfTriangles;
     }
 
-    public abstract void March();
-
+    public abstract ProceduralMeshInfo March();
 }
