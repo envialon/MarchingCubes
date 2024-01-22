@@ -105,7 +105,6 @@ public abstract class Marcher
         }
     }
 
-
     public abstract void AddSelectedVertex(in Vector3 pos);
     public abstract void RemoveSelectedVertex(in Vector3 pos);
 

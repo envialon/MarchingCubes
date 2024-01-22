@@ -72,14 +72,28 @@ public class ProceduralMeshComponent : MonoBehaviour
     }
     private void ReactToClick(object sender, EventArgs e)
     {
-        mesh.Clear();
 
-        marcher.AddSelectedVertex(((ClickEventArgs)e).pos);
+        mesh.Clear();
+        ClickEventArgs eArgs = (ClickEventArgs)e;
+        if (eArgs.clickType == ClickEventArgs.ClickType.RightClick)
+        {
+            marcher.RemoveSelectedVertex(eArgs.pos);
+            Debug.Log("Added vertex at " + eArgs.pos);
+
+        }
+        else if (eArgs.clickType == ClickEventArgs.ClickType.LeftClick)
+        {
+            marcher.AddSelectedVertex(eArgs.pos);
+
+        }
         Marcher.ProceduralMeshInfo meshInfo = marcher.March();
         mesh.vertices = meshInfo.meshVertices;
         mesh.triangles = meshInfo.meshTriangles;
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
-        meshCollider.sharedMesh = mesh;
+        if (mesh.vertexCount > 0)
+        {
+            meshCollider.sharedMesh = mesh;
+        }
     }
 }

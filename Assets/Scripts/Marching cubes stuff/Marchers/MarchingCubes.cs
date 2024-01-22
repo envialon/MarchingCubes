@@ -1,18 +1,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Unity.Burst;
 using UnityEngine;
 
-using Unity.Burst;
-using PlasticPipe.PlasticProtocol.Messages;
-using static UnityEditor.PlayerSettings;
-using System.Runtime.InteropServices.WindowsRuntime;
-
-public class MarchingCubes
-
-
-
-    : Marcher
+public class MarchingCubes : Marcher
 {
+    public float opacity = 4f;
+    public float brushRadius = 2;
     float threshold = .5f;
     float[,,] values;
 
@@ -21,9 +16,8 @@ public class MarchingCubes
         Initialize();
         this.threshold = threshold;
     }
-    
 
-    private void InitializeValues()
+    private void InitializeValues(int defaultValue = 0)
     {
         values = new float[boundSize, boundSize, boundSize];
         for (int i = 0; i < boundSize; i++)
@@ -32,7 +26,7 @@ public class MarchingCubes
             {
                 for (int k = 0; k < boundSize; k++)
                 {
-                    float value = UnityEngine.Random.Range(0f, 1f);
+                    float value = defaultValue == -1 ? UnityEngine.Random.Range(0f, 1f) : defaultValue;
                     values[i, j, k] = value;
                 }
             }
@@ -42,28 +36,73 @@ public class MarchingCubes
     protected override void Initialize()
     {
         base.Initialize();
-        InitializeValues();
+       InitializeValues(0);
+    }
+
+    private Vector3Int[] GetBrushPoints(in Vector3 pos)
+    {
+        float posMagnitude = pos.sqrMagnitude;
+        float squareRadius = brushRadius * brushRadius;
+        HashSet<Vector3Int> output = new HashSet<Vector3Int>();
+        Vector3[] offsets = new Vector3[8];
+
+        for (int i = 0; i < brushRadius; i++)
+        {
+            for (int j = 0; j < brushRadius; j++)
+            {
+                for (int k = 0; k < brushRadius; k++)
+                {
+                    offsets[0] = new Vector3(i, j, k);
+                    offsets[1] = new Vector3(-i, j, k);
+                    offsets[2] = new Vector3(i, -j, k);
+                    offsets[3] = new Vector3(i, j, -k);
+                    offsets[4] = new Vector3(-i, -j, k);
+                    offsets[5] = new Vector3(-i, j, -k);
+                    offsets[6] = new Vector3(i, -j, -k);
+                    offsets[7] = new Vector3(-i, -j, -k);
+
+                    for (int l = 0; l < offsets.Length; l++)
+                    {
+                        Vector3Int point = Vector3Int.FloorToInt(pos + offsets[l]);
+                        if (offsets[l].sqrMagnitude < squareRadius && IsPositionValid(point, boundSize))
+                        {
+                            output.Add(point);
+                        }
+                    }
+
+                }
+            }
+        }
+        return output.ToArray();
     }
 
     public override void AddSelectedVertex(in Vector3 pos)
     {
-
+        Vector3Int[] points = GetBrushPoints(pos);
+        foreach (Vector3Int point in points)
+        {
+            values[point.x, point.y, point.z] += opacity;
+        }
     }
 
     public override void RemoveSelectedVertex(in Vector3 pos)
     {
-
+        Vector3Int[] points = GetBrushPoints(pos);
+        foreach (Vector3Int point in points)
+        {
+            values[(int)point.x, (int)point.y, (int)point.z] -= opacity;
+        }
     }
 
     private static float GetValue(in Vector3 pos, float resolution, in float[,,] values)
     {
-
-        if (IsPositionValid(pos, values.GetLength(0))) { 
-        Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-        return values[index.x, index.y, index.z];
-    }
+        if (IsPositionValid(pos, values.GetLength(0)))
+        {
+            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
+            return values[index.x, index.y, index.z];
+        }
         return 0;
-    }    
+    }
 
     [BurstCompile]
     private static void March(int boundSize, float resolution, float threshold, float interpolationThreshold, InterpolationMethod interpolationMethod,
@@ -94,7 +133,7 @@ public class MarchingCubes
                     window[6] = new Vector3(i + resolution, j + resolution, k + resolution);
                     window[7] = new Vector3(i, j + resolution, k + resolution);
 
-                    valueWindow[0] = GetValue(window[0],resolution, values);
+                    valueWindow[0] = GetValue(window[0], resolution, values);
                     valueWindow[1] = GetValue(window[1], resolution, values);
                     valueWindow[2] = GetValue(window[2], resolution, values);
                     valueWindow[3] = GetValue(window[3], resolution, values);
