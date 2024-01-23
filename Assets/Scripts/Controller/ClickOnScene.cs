@@ -24,16 +24,10 @@ public class ClickOnScene : MonoBehaviour
     static public event EventHandler OnClickOnScene;
 
     ClickEventArgs.ClickType type;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.Mouse1))
+        if (Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.Mouse1))
         {
             if (Input.GetKey(KeyCode.Mouse0))
             {
@@ -46,12 +40,10 @@ public class ClickOnScene : MonoBehaviour
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
-            if(Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit))
             {
-                Vector3Int pos = Vector3Int.RoundToInt(hit.point + new Vector3(0,.4f, 0));
+                Vector3Int pos = Vector3Int.RoundToInt(hit.point + new Vector3(0, .4f, 0));
                 OnClickOnScene?.Invoke(this, new ClickEventArgs(pos, type));
-             //   Debug.Log("Clicked on " + pos);
-              
             }
         }
     }

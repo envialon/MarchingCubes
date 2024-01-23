@@ -193,7 +193,6 @@ public abstract class Marcher
     [BurstCompile]
     protected static int CreateTriangles(int index, in Vector3[] vertices, List<Vector3> meshVertices, Dictionary<Vector3, int> meshVerticesIndices, List<int> meshTriangles)
     {
-        //int offset = meshVertices.Count();
         int numberOfTriangles = 0;
         ;
         for (int i = 0; TriangulationLookupTable.GetTriTable(index, i) != -1; i += 3)

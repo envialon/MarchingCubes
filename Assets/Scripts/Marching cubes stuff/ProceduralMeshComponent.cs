@@ -26,7 +26,6 @@ public class ProceduralMeshComponent : MonoBehaviour
     public Marcher.InterpolationMethod interpolationMethod;
     #endregion
 
-
     public int boundSize;
     public float resolution;
     public float valueThreshold;
@@ -62,7 +61,6 @@ public class ProceduralMeshComponent : MonoBehaviour
         meshCollider.sharedMesh = mesh;
         meshRenderer.material = material;
 
-
         InitializeMarcher();
     }
 
@@ -78,13 +76,10 @@ public class ProceduralMeshComponent : MonoBehaviour
         if (eArgs.clickType == ClickEventArgs.ClickType.RightClick)
         {
             marcher.RemoveSelectedVertex(eArgs.pos);
-            Debug.Log("Added vertex at " + eArgs.pos);
-
         }
         else if (eArgs.clickType == ClickEventArgs.ClickType.LeftClick)
         {
             marcher.AddSelectedVertex(eArgs.pos);
-
         }
         Marcher.ProceduralMeshInfo meshInfo = marcher.March();
         mesh.vertices = meshInfo.meshVertices;
