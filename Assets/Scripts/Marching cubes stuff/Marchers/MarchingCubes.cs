@@ -39,15 +39,7 @@ public class MarchingCubes : Marcher
         }
     }
 
-    private static float GetValue(in Vector3 pos, float resolution, in float[,,] values)
-    {
-        if (IsPositionValid(pos, values.GetLength(0)))
-        {
-            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-            return values[index.x, index.y, index.z];
-        }
-        return 0;
-    }
+
 
     [BurstCompile]
     private static void March(int boundSize, float resolution, float threshold, InterpolationMethod interpolationMethod,

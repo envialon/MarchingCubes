@@ -43,17 +43,7 @@ public class MarchingSelectiveCubes : Marcher
         }
     }
 
-    [BurstCompile]
-    private static float GetValue(in Vector3 pos, float resolution, in float[,,] values)
-    {
-        if (IsPositionValid(pos, values.GetLength(0)))
-        {
-            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-            return values[index.x, index.y, index.z];
-        }
-        return 0;
-    }
-
+    #region Marching
 
     [BurstCompile]
     private static void GetWindowsAroundPoint(in Vector3 pos, in float[,,] values, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
@@ -109,10 +99,12 @@ public class MarchingSelectiveCubes : Marcher
 
         foreach (Vector3 point in selectedVertices)
         {
+            //Get all the windows containing the current point
             GetWindowsAroundPoint(point, values, resolution, ref posWindows, ref valueWindows);
 
             for (int i = 0; i < 8; i++)
             {
+                // If the window contains a point that has already been marched, skip it
                 if (marchedPoints.Contains(posWindows[i][0]) ||
                     marchedPoints.Contains(posWindows[i][1]) ||
                     marchedPoints.Contains(posWindows[i][2]) ||
@@ -154,4 +146,5 @@ public class MarchingSelectiveCubes : Marcher
         March(boundSize, resolution, threshold, interpolationMethod, selectedVertices, values, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
         return new ProceduralMeshInfo(meshVertices, meshTriangles);
     }
+    #endregion
 }

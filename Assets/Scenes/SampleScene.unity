@@ -526,11 +526,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: d2a263cad134c8d4498b9446d584e95b, type: 2}
   marchingMethod: 1
-  interpolationMethod: 0
+  interpolationMethod: 2
   boundSize: 10
   resolution: 1
-  valueThreshold: 3
-  interpolationThreshold: 1.5
+  threshold: 1.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

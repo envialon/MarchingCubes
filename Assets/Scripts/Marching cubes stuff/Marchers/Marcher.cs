@@ -77,6 +77,17 @@ public abstract class Marcher
         bool output = pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize && pos.z >= 0 && pos.z < boundSize;
         return output;
     }
+ 
+    [BurstCompile]
+    protected static float GetValue(in Vector3 pos, float resolution, in float[,,] values)
+    {
+        if (IsPositionValid(pos, values.GetLength(0)))
+        {
+            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
+            return values[index.x, index.y, index.z];
+        }
+        return 0;
+    }
 
     #region Interpolation 
 
