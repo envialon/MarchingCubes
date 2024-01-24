@@ -34,8 +34,25 @@ public abstract class Marcher
 
     public int boundSize;
     public float resolution;
-    public float interpolationThreshold;
+    public float threshold;
     public InterpolationMethod interpolationMethod;
+    public float[,,] values;
+
+    protected void InitializeValues(float defaultValue = 0)
+    {
+        values = new float[boundSize, boundSize, boundSize];
+        for (int i = 0; i < boundSize; i++)
+        {
+            for (int j = 0; j < boundSize; j++)
+            {
+                for (int k = 0; k < boundSize; k++)
+                {
+                    float value = defaultValue == -1 ? UnityEngine.Random.Range(0f, 1f) : defaultValue;
+                    values[i, j, k] = value;
+                }
+            }
+        }
+    }
 
     [BurstCompile]
     protected static bool IsPositionValid(in Vector3 pos, int boundSize)
@@ -49,7 +66,7 @@ public abstract class Marcher
         Initialize();
         this.boundSize = boundSize;
         this.resolution = resolution;
-        this.interpolationThreshold = interpolationThreshold;
+        this.threshold = interpolationThreshold;
         this.interpolationMethod = method;
 
     }
@@ -70,14 +87,14 @@ public abstract class Marcher
     }
 
     [BurstCompile]
-    protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
+    protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float threshold)
     {
 
-        if(Mathf.Abs(interpolationThreshold-f1)<0.0001f)
+        if(Mathf.Abs(threshold-f1)<0.0001f)
         {
             return v1;
         }
-        if (Mathf.Abs(interpolationThreshold - f2) < 0.0001f)
+        if (Mathf.Abs(threshold - f2) < 0.0001f)
         {
             return v2;
         }
@@ -85,7 +102,7 @@ public abstract class Marcher
         {
             return v1;
         }
-        float t = (interpolationThreshold - f1) / (f2 - f1);
+        float t = (threshold - f1) / (f2 - f1);
         t = t * t * (3 - 2 * t);
 
         return new Vector3(v1.x + t * (v2.x - v1.x),
@@ -95,13 +112,13 @@ public abstract class Marcher
     }
 
     [BurstCompile]
-    protected static Vector3 GetLinealInterpolation(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
+    protected static Vector3 GetLinealInterpolation(Vector3 v1, Vector3 v2, float f1, float f2, float threshold)
     {
-        if (Mathf.Abs(interpolationThreshold - f1) < 0.0001f)
+        if (Mathf.Abs(threshold - f1) < 0.0001f)
         {
             return v1;
         }
-        if (Mathf.Abs(interpolationThreshold - f2) < 0.0001f)
+        if (Mathf.Abs(threshold - f2) < 0.0001f)
         {
             return v2;
         }
@@ -109,7 +126,7 @@ public abstract class Marcher
         {
             return v1;
         }
-        float t = (interpolationThreshold - f1) / (f2 - f1);
+        float t = (threshold - f1) / (f2 - f1);
         Vector3 returnVal = new Vector3(v1.x + t * (v2.x - v1.x),
                        v1.y + t * (v2.y - v1.y),
                        v1.z + t * (v2.z - v1.z));
@@ -135,16 +152,16 @@ public abstract class Marcher
     public abstract void RemoveSelectedVertex(in Vector3 pos);
 
     [BurstCompile]
-    protected static Vector3 GetEdgeVertex(in Vector3 v1, in Vector3 v2, float f1, float f2, float interpolationThreshold, InterpolationMethod interpolationMethod)
+    protected static Vector3 GetEdgeVertex(in Vector3 v1, in Vector3 v2, float f1, float f2, float threshold, InterpolationMethod interpolationMethod)
     {
         switch (interpolationMethod)
         {
             case InterpolationMethod.HalfPoint:
                 return GetHalfPoint(v1, v2);
             case InterpolationMethod.Linear:
-                return GetLinealInterpolation(v1, v2, f1, f2, interpolationThreshold);
+                return GetLinealInterpolation(v1, v2, f1, f2, threshold);
             case InterpolationMethod.Smoothstep:
-                return GetSmoothstep(v1, v2, f1, f2, interpolationThreshold);
+                return GetSmoothstep(v1, v2, f1, f2, threshold);
             default:
                 return GetHalfPoint(v1, v2);
         }
@@ -152,7 +169,7 @@ public abstract class Marcher
 
     [BurstCompile]
     protected static int Poligonize(int configurationIndex, in Vector3[] window, in float[] cornerValues,
-                                    float interpolationThreshold, InterpolationMethod interpolationMethod,
+                                    float threshold, InterpolationMethod interpolationMethod,
                                     ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         Vector3[] edgeVertices = new Vector3[12];
@@ -167,51 +184,51 @@ public abstract class Marcher
 
         if ((edgeIndex & 1) != 0)
         {
-            edgeVertices[0] = GetEdgeVertex(window[0], window[1], cornerValues[0], cornerValues[1], interpolationThreshold, interpolationMethod);
+            edgeVertices[0] = GetEdgeVertex(window[0], window[1], cornerValues[0], cornerValues[1], threshold, interpolationMethod);
         }
         if ((edgeIndex & 2) != 0)
         {
-            edgeVertices[1] = GetEdgeVertex(window[1], window[2], cornerValues[1], cornerValues[2], interpolationThreshold, interpolationMethod);
+            edgeVertices[1] = GetEdgeVertex(window[1], window[2], cornerValues[1], cornerValues[2], threshold, interpolationMethod);
         }
         if ((edgeIndex & 4) != 0)
         {
-            edgeVertices[2] = GetEdgeVertex(window[2], window[3], cornerValues[2], cornerValues[3], interpolationThreshold, interpolationMethod);
+            edgeVertices[2] = GetEdgeVertex(window[2], window[3], cornerValues[2], cornerValues[3], threshold, interpolationMethod);
         }
         if ((edgeIndex & 8) != 0)
         {
-            edgeVertices[3] = GetEdgeVertex(window[3], window[0], cornerValues[3], cornerValues[0], interpolationThreshold, interpolationMethod);
+            edgeVertices[3] = GetEdgeVertex(window[3], window[0], cornerValues[3], cornerValues[0], threshold, interpolationMethod);
         }
         if ((edgeIndex & 16) != 0)
         {
-            edgeVertices[4] = GetEdgeVertex(window[4], window[5], cornerValues[4], cornerValues[5], interpolationThreshold, interpolationMethod);
+            edgeVertices[4] = GetEdgeVertex(window[4], window[5], cornerValues[4], cornerValues[5], threshold, interpolationMethod);
         }
         if ((edgeIndex & 32) != 0)
         {
-            edgeVertices[5] = GetEdgeVertex(window[5], window[6], cornerValues[5], cornerValues[6], interpolationThreshold, interpolationMethod);
+            edgeVertices[5] = GetEdgeVertex(window[5], window[6], cornerValues[5], cornerValues[6], threshold, interpolationMethod);
         }
         if ((edgeIndex & 64) != 0)
         {
-            edgeVertices[6] = GetEdgeVertex(window[6], window[7], cornerValues[6], cornerValues[7], interpolationThreshold, interpolationMethod);
+            edgeVertices[6] = GetEdgeVertex(window[6], window[7], cornerValues[6], cornerValues[7], threshold, interpolationMethod);
         }
         if ((edgeIndex & 128) != 0)
         {
-            edgeVertices[7] = GetEdgeVertex(window[7], window[4], cornerValues[7], cornerValues[4], interpolationThreshold, interpolationMethod);
+            edgeVertices[7] = GetEdgeVertex(window[7], window[4], cornerValues[7], cornerValues[4], threshold, interpolationMethod);
         }
         if ((edgeIndex & 256) != 0)
         {
-            edgeVertices[8] = GetEdgeVertex(window[0], window[4], cornerValues[0], cornerValues[4], interpolationThreshold, interpolationMethod);
+            edgeVertices[8] = GetEdgeVertex(window[0], window[4], cornerValues[0], cornerValues[4], threshold, interpolationMethod);
         }
         if ((edgeIndex & 512) != 0)
         {
-            edgeVertices[9] = GetEdgeVertex(window[1], window[5], cornerValues[1], cornerValues[5], interpolationThreshold, interpolationMethod);
+            edgeVertices[9] = GetEdgeVertex(window[1], window[5], cornerValues[1], cornerValues[5], threshold, interpolationMethod);
         }
         if ((edgeIndex & 1024) != 0)
         {
-            edgeVertices[10] = GetEdgeVertex(window[2], window[6], cornerValues[2], cornerValues[6], interpolationThreshold, interpolationMethod);
+            edgeVertices[10] = GetEdgeVertex(window[2], window[6], cornerValues[2], cornerValues[6], threshold, interpolationMethod);
         }
         if ((edgeIndex & 2048) != 0)
         {
-            edgeVertices[11] = GetEdgeVertex(window[3], window[7], cornerValues[3], cornerValues[7], interpolationThreshold, interpolationMethod);
+            edgeVertices[11] = GetEdgeVertex(window[3], window[7], cornerValues[3], cornerValues[7], threshold, interpolationMethod);
         }
         return CreateTriangles(configurationIndex, edgeVertices, meshVertices, meshVerticesIndices, meshTriangles);
     }

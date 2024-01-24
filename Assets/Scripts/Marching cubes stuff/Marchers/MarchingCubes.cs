@@ -8,29 +8,11 @@ public class MarchingCubes : Marcher
 {
     public float opacity = 4f;
     public float brushRadius = 2;
-    float threshold = .5f;
-    float[,,] values;
 
-    public MarchingCubes(int boundSize, float resolution, float threshold, float interpolationThreshold, InterpolationMethod method) : base(boundSize, resolution, interpolationThreshold, method)
+    public MarchingCubes(int boundSize, float resolution, float threshold,InterpolationMethod method) : base(boundSize, resolution, threshold, method)
     {
         Initialize();
         this.threshold = threshold;
-    }
-
-    private void InitializeValues(int defaultValue = 0)
-    {
-        values = new float[boundSize, boundSize, boundSize];
-        for (int i = 0; i < boundSize; i++)
-        {
-            for (int j = 0; j < boundSize; j++)
-            {
-                for (int k = 0; k < boundSize; k++)
-                {
-                    float value = defaultValue == -1 ? UnityEngine.Random.Range(0f, 1f) : defaultValue;
-                    values[i, j, k] = value;
-                }
-            }
-        }
     }
 
     protected override void Initialize()
@@ -41,7 +23,6 @@ public class MarchingCubes : Marcher
 
     private Vector3Int[] GetBrushPoints(in Vector3 pos)
     {
-        float posMagnitude = pos.sqrMagnitude;
         float squareRadius = brushRadius * brushRadius;
         HashSet<Vector3Int> output = new HashSet<Vector3Int>();
         Vector3[] offsets = new Vector3[8];
@@ -105,7 +86,7 @@ public class MarchingCubes : Marcher
     }
 
     [BurstCompile]
-    private static void March(int boundSize, float resolution, float threshold, float interpolationThreshold, InterpolationMethod interpolationMethod,
+    private static void March(int boundSize, float resolution, float threshold, InterpolationMethod interpolationMethod,
        in float[,,] values,
         ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
@@ -143,7 +124,7 @@ public class MarchingCubes : Marcher
                     valueWindow[7] = GetValue(window[7], resolution, values);
 
 
-                    Poligonize(GenerateConfigurationIndexFromWindow(values, window, boundSize, resolution, threshold), window, valueWindow, interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
+                    Poligonize(GenerateConfigurationIndexFromWindow(values, window, boundSize, resolution, threshold), window, valueWindow, threshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
                 }
             }
         }
@@ -171,7 +152,7 @@ public class MarchingCubes : Marcher
 
     public override ProceduralMeshInfo March()
     {
-        March(boundSize, resolution, threshold, interpolationThreshold, interpolationMethod, values, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
+        March(boundSize, resolution, threshold, interpolationMethod, values, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
         return new ProceduralMeshInfo(meshVertices, meshTriangles);
     }
 }

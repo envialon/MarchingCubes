@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Burst;
+using PlasticPipe.PlasticProtocol.Messages;
 
 /// <summary>
 /// This Version of the Marcher only generates the mesh around the selected vertices
@@ -17,6 +18,7 @@ public class MarchingSelectiveCubes : Marcher
     protected override void Initialize()
     {
         base.Initialize();
+        InitializeValues(1f);
         selectedVertices = new HashSet<Vector3>();
     }
 
@@ -25,26 +27,35 @@ public class MarchingSelectiveCubes : Marcher
         if ((IsPositionValid(pos, boundSize) && !selectedVertices.Contains(pos)))
         {
             selectedVertices.Add(pos);
+            values[(int)pos.x, (int)pos.y, (int)pos.z] += threshold;
         }
     }
 
+    /// CANT CLICK ON THE VERTEX BECAUSE ITS UNDER THE MESH
     public override void RemoveSelectedVertex(in Vector3 pos)
     {
-        if (IsPositionValid(pos, boundSize)&& !selectedVertices.Contains(pos))
+        if (IsPositionValid(pos, boundSize))
         {
             selectedVertices.Remove(pos);
+            values[(int)pos.x, (int)pos.y, (int)pos.z] -= threshold;    
+            Debug.Log("Removed");
         }
     }
 
     [BurstCompile]
-    private static float GetValue(in Vector3 pos)
+    private static float GetValue(in Vector3 pos, float resolution, in float[,,] values)
     {
-        return (float)Random.Range(0.1f, 1);
+        if (IsPositionValid(pos, values.GetLength(0)))
+        {
+            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
+            return values[index.x, index.y, index.z];
+        }
+        return 0;
     }
 
-   
+
     [BurstCompile]
-    private static void GetWindowsAroundPoint(in Vector3 pos, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
+    private static void GetWindowsAroundPoint(in Vector3 pos, in float[,,] values, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
     {
         int windowIndex = 0;
         for (float i = -resolution; i <= 0; i += resolution)
@@ -65,27 +76,39 @@ public class MarchingSelectiveCubes : Marcher
                     posWindows[windowIndex][6] = currentPos + new Vector3(resolution, resolution, resolution);
                     posWindows[windowIndex][7] = currentPos + new Vector3(0, resolution, resolution);
 
-                    valueWindows[windowIndex][0] = GetValue(posWindows[windowIndex][0]);
-                    valueWindows[windowIndex][1] = GetValue(posWindows[windowIndex][1]);
-                    valueWindows[windowIndex][2] = GetValue(posWindows[windowIndex][2]);
-                    valueWindows[windowIndex][3] = GetValue(posWindows[windowIndex][3]);
-                    valueWindows[windowIndex][4] = GetValue(posWindows[windowIndex][4]);
-                    valueWindows[windowIndex][5] = GetValue(posWindows[windowIndex][5]);
-                    valueWindows[windowIndex][6] = GetValue(posWindows[windowIndex][6]);
-                    valueWindows[windowIndex][7] = GetValue(posWindows[windowIndex][7]);
+                    valueWindows[windowIndex][0] = GetValue(posWindows[windowIndex][0], resolution, values);
+                    valueWindows[windowIndex][1] = GetValue(posWindows[windowIndex][1], resolution, values);
+                    valueWindows[windowIndex][2] = GetValue(posWindows[windowIndex][2], resolution, values);
+                    valueWindows[windowIndex][3] = GetValue(posWindows[windowIndex][3], resolution, values);
+                    valueWindows[windowIndex][4] = GetValue(posWindows[windowIndex][4], resolution, values);
+                    valueWindows[windowIndex][5] = GetValue(posWindows[windowIndex][5], resolution, values);
+                    valueWindows[windowIndex][6] = GetValue(posWindows[windowIndex][6], resolution, values);
+                    valueWindows[windowIndex][7] = GetValue(posWindows[windowIndex][7], resolution, values);
                     windowIndex++;
                 }
             }
         }
     }
 
+    private static string EncodeWindow(in Vector3[] window)
+    {
+        string encodedWindow = "";
+        foreach (Vector3 pos in window)
+        {
+            encodedWindow += pos.ToString();
+        }
+        return encodedWindow;
+    }
+
     [BurstCompile]
     private static void March(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod interpolationMethod,
-        HashSet<Vector3> selectedVertices,
+        HashSet<Vector3> selectedVertices, float[,,] values,
         ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         Vector3[][] posWindows = new Vector3[8][];
         float[][] valueWindows = new float[8][];
+
+        HashSet<string> marchedWindows = new HashSet<string>();
 
         for (int i = 0; i < 8; i++)
         {
@@ -95,11 +118,16 @@ public class MarchingSelectiveCubes : Marcher
 
         foreach (Vector3 point in selectedVertices)
         {
-            GetWindowsAroundPoint(point, resolution, ref posWindows, ref valueWindows);
+            GetWindowsAroundPoint(point, values, resolution, ref posWindows, ref valueWindows);
 
             for (int i = 0; i < 8; i++)
             {
-                Poligonize(GenerateConfigurationIndexFromWindow(selectedVertices, posWindows[i]), posWindows[i], valueWindows[i], interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
+                string encodedWindow = EncodeWindow(posWindows[i]);
+                if (!marchedWindows.Contains(encodedWindow))
+                {
+                    Poligonize(GenerateConfigurationIndexFromWindow(selectedVertices, posWindows[i]), posWindows[i], valueWindows[i], interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
+                    marchedWindows.Add(encodedWindow);
+                }
             }
         }
     }
@@ -122,7 +150,10 @@ public class MarchingSelectiveCubes : Marcher
 
     public override ProceduralMeshInfo March()
     {
-        March(boundSize, resolution, interpolationThreshold, interpolationMethod, selectedVertices, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
+        meshTriangles.Clear();
+        meshVerticesIndices.Clear();
+        meshVertices.Clear();
+        March(boundSize, resolution, threshold, interpolationMethod, selectedVertices, values, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
         return new ProceduralMeshInfo(meshVertices, meshTriangles);
     }
 }

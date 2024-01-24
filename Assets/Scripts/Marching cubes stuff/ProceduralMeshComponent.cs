@@ -28,15 +28,14 @@ public class ProceduralMeshComponent : MonoBehaviour
 
     public int boundSize;
     public float resolution;
-    public float valueThreshold;
-    public float interpolationThreshold;
+    public float threshold;
 
 
     private void UpdateMarcherAttributes()
     {
         marcher.boundSize = boundSize;
         marcher.resolution = resolution;
-        marcher.interpolationThreshold = interpolationThreshold;
+        marcher.threshold = threshold;
         marcher.interpolationMethod = interpolationMethod;
     }
 
@@ -45,13 +44,13 @@ public class ProceduralMeshComponent : MonoBehaviour
         switch (marchingMethod)
         {
             case MarchingMethod.MarchingCubes:
-                marcher = new MarchingCubes(boundSize, resolution, valueThreshold, interpolationThreshold, interpolationMethod);
+                marcher = new MarchingCubes(boundSize, resolution,  threshold, interpolationMethod);
                 break;
             case MarchingMethod.MarchingOctTrees:
-                marcher = new MarchingOctTree(boundSize, resolution, interpolationThreshold, interpolationMethod);
+                marcher = new MarchingOctTree(boundSize, resolution, threshold, interpolationMethod);
                 break;
             case MarchingMethod.MarchingSelectiveCubes:
-                marcher = new MarchingSelectiveCubes(boundSize, resolution, interpolationThreshold, interpolationMethod);
+                marcher = new MarchingSelectiveCubes(boundSize, resolution, threshold, interpolationMethod);
                 break;
         }
     }
@@ -95,7 +94,7 @@ public class ProceduralMeshComponent : MonoBehaviour
         mesh.triangles = meshInfo.meshTriangles;
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
-        if (mesh.vertexCount > 0)
+        if (mesh.vertexCount >= 3)
         {
             meshCollider.sharedMesh = mesh;
         }
