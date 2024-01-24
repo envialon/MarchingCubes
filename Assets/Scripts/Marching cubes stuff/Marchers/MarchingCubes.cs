@@ -21,42 +21,6 @@ public class MarchingCubes : Marcher
        InitializeValues(0);
     }
 
-    private Vector3Int[] GetBrushPoints(in Vector3 pos)
-    {
-        float squareRadius = brushRadius * brushRadius;
-        HashSet<Vector3Int> output = new HashSet<Vector3Int>();
-        Vector3[] offsets = new Vector3[8];
-
-        for (int i = 0; i < brushRadius; i++)
-        {
-            for (int j = 0; j < brushRadius; j++)
-            {
-                for (int k = 0; k < brushRadius; k++)
-                {
-                    offsets[0] = new Vector3(i, j, k);
-                    offsets[1] = new Vector3(-i, j, k);
-                    offsets[2] = new Vector3(i, -j, k);
-                    offsets[3] = new Vector3(i, j, -k);
-                    offsets[4] = new Vector3(-i, -j, k);
-                    offsets[5] = new Vector3(-i, j, -k);
-                    offsets[6] = new Vector3(i, -j, -k);
-                    offsets[7] = new Vector3(-i, -j, -k);
-
-                    for (int l = 0; l < offsets.Length; l++)
-                    {
-                        Vector3Int point = Vector3Int.FloorToInt(pos + offsets[l]);
-                        if (offsets[l].sqrMagnitude < squareRadius && IsPositionValid(point, boundSize))
-                        {
-                            output.Add(point);
-                        }
-                    }
-
-                }
-            }
-        }
-        return output.ToArray();
-    }
-
     public override void AddSelectedVertex(in Vector3 pos)
     {
         Vector3Int[] points = GetBrushPoints(pos);

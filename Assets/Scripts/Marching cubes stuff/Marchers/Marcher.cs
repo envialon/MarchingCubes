@@ -54,11 +54,11 @@ public abstract class Marcher
         }
     }
 
-    [BurstCompile]
-    protected static bool IsPositionValid(in Vector3 pos, int boundSize)
+    protected virtual void Initialize()
     {
-        bool output = pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize && pos.z >= 0 && pos.z < boundSize;
-        return output;
+        meshVerticesIndices = new Dictionary<Vector3, int>();
+        meshVertices = new List<Vector3>();
+        meshTriangles = new List<int>();
     }
 
     public Marcher(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method)
@@ -71,11 +71,11 @@ public abstract class Marcher
 
     }
 
-    protected virtual void Initialize()
+    [BurstCompile]
+    protected static bool IsPositionValid(in Vector3 pos, int boundSize)
     {
-        meshVerticesIndices = new Dictionary<Vector3, int>();
-        meshVertices = new List<Vector3>();
-        meshTriangles = new List<int>();
+        bool output = pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize && pos.z >= 0 && pos.z < boundSize;
+        return output;
     }
 
     #region Interpolation 
@@ -134,6 +134,7 @@ public abstract class Marcher
     }
     #endregion
 
+    #region Click and Value manipulation stuff
     private void ReactToClick(object sender, EventArgs e)
     {
         // Debug.Log("Reacting to click");
@@ -148,9 +149,49 @@ public abstract class Marcher
         }
     }
 
+
+    protected Vector3Int[] GetBrushPoints(in Vector3 pos,float brushRadius = 2)
+    {
+        float squareRadius = brushRadius * brushRadius;
+        HashSet<Vector3Int> output = new HashSet<Vector3Int>();
+        Vector3[] offsets = new Vector3[8];
+
+        for (int i = 0; i < brushRadius; i++)
+        {
+            for (int j = 0; j < brushRadius; j++)
+            {
+                for (int k = 0; k < brushRadius; k++)
+                {
+                    offsets[0] = new Vector3(i, j, k);
+                    offsets[1] = new Vector3(-i, j, k);
+                    offsets[2] = new Vector3(i, -j, k);
+                    offsets[3] = new Vector3(i, j, -k);
+                    offsets[4] = new Vector3(-i, -j, k);
+                    offsets[5] = new Vector3(-i, j, -k);
+                    offsets[6] = new Vector3(i, -j, -k);
+                    offsets[7] = new Vector3(-i, -j, -k);
+
+                    for (int l = 0; l < offsets.Length; l++)
+                    {
+                        Vector3Int point = Vector3Int.FloorToInt(pos + offsets[l]);
+                        if (offsets[l].sqrMagnitude < squareRadius && IsPositionValid(point, boundSize))
+                        {
+                            output.Add(point);
+                        }
+                    }
+
+                }
+            }
+        }
+        return output.ToArray();
+    }
+
+
     public abstract void AddSelectedVertex(in Vector3 pos);
     public abstract void RemoveSelectedVertex(in Vector3 pos);
+    #endregion
 
+    #region Marching cubes core methods
     [BurstCompile]
     protected static Vector3 GetEdgeVertex(in Vector3 v1, in Vector3 v2, float f1, float f2, float threshold, InterpolationMethod interpolationMethod)
     {
@@ -268,6 +309,7 @@ public abstract class Marcher
         }
         return numberOfTriangles;
     }
+    #endregion
 
     public abstract ProceduralMeshInfo March();
 }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Burst;
 using PlasticPipe.PlasticProtocol.Messages;
+using UnityEditor.PackageManager.UI;
 
 /// <summary>
 /// This Version of the Marcher only generates the mesh around the selected vertices
@@ -37,7 +38,7 @@ public class MarchingSelectiveCubes : Marcher
         if (IsPositionValid(pos, boundSize))
         {
             selectedVertices.Remove(pos);
-            values[(int)pos.x, (int)pos.y, (int)pos.z] -= threshold;    
+            values[(int)pos.x, (int)pos.y, (int)pos.z] -= threshold;
             Debug.Log("Removed");
         }
     }
@@ -90,16 +91,6 @@ public class MarchingSelectiveCubes : Marcher
         }
     }
 
-    private static string EncodeWindow(in Vector3[] window)
-    {
-        string encodedWindow = "";
-        foreach (Vector3 pos in window)
-        {
-            encodedWindow += pos.ToString();
-        }
-        return encodedWindow;
-    }
-
     [BurstCompile]
     private static void March(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod interpolationMethod,
         HashSet<Vector3> selectedVertices, float[,,] values,
@@ -108,7 +99,7 @@ public class MarchingSelectiveCubes : Marcher
         Vector3[][] posWindows = new Vector3[8][];
         float[][] valueWindows = new float[8][];
 
-        HashSet<string> marchedWindows = new HashSet<string>();
+        HashSet<Vector3> marchedPoints = new HashSet<Vector3>();
 
         for (int i = 0; i < 8; i++)
         {
@@ -122,13 +113,20 @@ public class MarchingSelectiveCubes : Marcher
 
             for (int i = 0; i < 8; i++)
             {
-                string encodedWindow = EncodeWindow(posWindows[i]);
-                if (!marchedWindows.Contains(encodedWindow))
+                if (marchedPoints.Contains(posWindows[i][0]) ||
+                    marchedPoints.Contains(posWindows[i][1]) ||
+                    marchedPoints.Contains(posWindows[i][2]) ||
+                    marchedPoints.Contains(posWindows[i][3]) ||
+                    marchedPoints.Contains(posWindows[i][4]) ||
+                    marchedPoints.Contains(posWindows[i][5]) ||
+                    marchedPoints.Contains(posWindows[i][6]) ||
+                    marchedPoints.Contains(posWindows[i][7]))
                 {
-                    Poligonize(GenerateConfigurationIndexFromWindow(selectedVertices, posWindows[i]), posWindows[i], valueWindows[i], interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
-                    marchedWindows.Add(encodedWindow);
+                    continue;
                 }
+                Poligonize(GenerateConfigurationIndexFromWindow(selectedVertices, posWindows[i]), posWindows[i], valueWindows[i], interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
             }
+            marchedPoints.Add(point);
         }
     }
 
