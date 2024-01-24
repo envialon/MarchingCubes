@@ -32,6 +32,14 @@ public class ProceduralMeshComponent : MonoBehaviour
     public float interpolationThreshold;
 
 
+    private void UpdateMarcherAttributes()
+    {
+        marcher.boundSize = boundSize;
+        marcher.resolution = resolution;
+        marcher.interpolationThreshold = interpolationThreshold;
+        marcher.interpolationMethod = interpolationMethod;
+    }
+
     private void InitializeMarcher()
     {
         switch (marchingMethod)
@@ -70,8 +78,9 @@ public class ProceduralMeshComponent : MonoBehaviour
     }
     private void ReactToClick(object sender, EventArgs e)
     {
-
         mesh.Clear();
+        UpdateMarcherAttributes();
+
         ClickEventArgs eArgs = (ClickEventArgs)e;
         if (eArgs.clickType == ClickEventArgs.ClickType.RightClick)
         {

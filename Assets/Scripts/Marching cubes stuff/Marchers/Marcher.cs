@@ -72,6 +72,19 @@ public abstract class Marcher
     [BurstCompile]
     protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
     {
+
+        if(Mathf.Abs(interpolationThreshold-f1)<0.0001f)
+        {
+            return v1;
+        }
+        if (Mathf.Abs(interpolationThreshold - f2) < 0.0001f)
+        {
+            return v2;
+        }
+        if(Mathf.Abs(f1-f2)<0.0001f)
+        {
+            return v1;
+        }
         float t = (interpolationThreshold - f1) / (f2 - f1);
         t = t * t * (3 - 2 * t);
 
@@ -84,10 +97,23 @@ public abstract class Marcher
     [BurstCompile]
     protected static Vector3 GetLinealInterpolation(Vector3 v1, Vector3 v2, float f1, float f2, float interpolationThreshold)
     {
+        if (Mathf.Abs(interpolationThreshold - f1) < 0.0001f)
+        {
+            return v1;
+        }
+        if (Mathf.Abs(interpolationThreshold - f2) < 0.0001f)
+        {
+            return v2;
+        }
+        if (Mathf.Abs(f1 - f2) < 0.0001f)
+        {
+            return v1;
+        }
         float t = (interpolationThreshold - f1) / (f2 - f1);
-        return new Vector3(v1.x + t * (v2.x - v1.x),
+        Vector3 returnVal = new Vector3(v1.x + t * (v2.x - v1.x),
                        v1.y + t * (v2.y - v1.y),
                        v1.z + t * (v2.z - v1.z));
+        return returnVal;
     }
     #endregion
 

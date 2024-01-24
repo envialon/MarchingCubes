@@ -1,101 +1,48 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
-
 using Unity.Burst;
-using UnityEngine.UI;
-using System;
 
+/// <summary>
+/// This Version of the Marcher only generates the mesh around the selected vertices
+/// </summary>
 public class MarchingSelectiveCubes : Marcher
 {
-    bool firstMarch = false;
-    Dictionary<Vector3, float> selectedVertices;
+    HashSet<Vector3> selectedVertices;
 
     public MarchingSelectiveCubes(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method) : base(boundSize, resolution, interpolationThreshold, method)
     {
         Initialize();
     }
 
-
-
-
     protected override void Initialize()
     {
         base.Initialize();
-        selectedVertices = new Dictionary<Vector3, float>();
+        selectedVertices = new HashSet<Vector3>();
     }
 
     public override void AddSelectedVertex(in Vector3 pos)
     {
-        if ((IsPositionValid(pos, boundSize) && !selectedVertices.ContainsKey(pos)))
+        if ((IsPositionValid(pos, boundSize) && !selectedVertices.Contains(pos)))
         {
-            selectedVertices.Add(pos, GetValue(pos));
+            selectedVertices.Add(pos);
         }
     }
 
     public override void RemoveSelectedVertex(in Vector3 pos)
     {
-        if (IsPositionValid(pos, boundSize)&& !selectedVertices.ContainsKey(pos))
+        if (IsPositionValid(pos, boundSize)&& !selectedVertices.Contains(pos))
         {
             selectedVertices.Remove(pos);
         }
     }
+
+    [BurstCompile]
     private static float GetValue(in Vector3 pos)
     {
-        return Mathf.PerlinNoise(pos.x, pos.z) + Mathf.PerlinNoise(pos.z, pos.y);
-        //if (IsPositionValid(pos, values.GetLength(0)))
-        //{
-        //    Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-        //    return values[index.x, index.y, index.z];
-        //}
-        //return 0;
+        return (float)Random.Range(0.1f, 1);
     }
 
-    /// <summary>
-    /// Used to march though the values the first time
-    /// </summary>
-    private void MarchThroughValues()
-
-    {
-        meshVerticesIndices.Clear();
-        meshVertices.Clear();
-        meshTriangles.Clear();
-
-        Vector3[] window = new Vector3[8];
-        float[] valueWindow = new float[8];
-
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
-        for (float i = 0; i < boundSize; i += resolution)
-        {
-            for (float j = 0; j < boundSize; j += resolution)
-            {
-                for (float k = 0; k < boundSize; k += resolution)
-                {
-                    window[0] = new Vector3(i, j, k);
-                    window[1] = new Vector3(i + resolution, j, k);
-                    window[2] = new Vector3(i + resolution, j + resolution, k);
-                    window[3] = new Vector3(i, j + resolution, k);
-                    window[4] = new Vector3(i, j, k + resolution);
-                    window[5] = new Vector3(i + resolution, j, k + resolution);
-                    window[6] = new Vector3(i + resolution, j + resolution, k + resolution);
-                    window[7] = new Vector3(i, j + resolution, k + resolution);
-
-                    for (int l = 0; l < 8; l++)
-                    {
-                        valueWindow[l] = GetValue(window[l]);
-                        //if (/*valueWindow[l] > interpolationThreshold &&*/ !selectedVertices.ContainsKey(window[l])) { selectedVertices.Add(window[l], valueWindow[l]); }
-                    }
-
-                    Poligonize(GenerateConfigurationIndexFromWindow(selectedVertices, window), window, valueWindow, interpolationThreshold, interpolationMethod, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
-                }
-            }
-        }
-        sw.Stop();
-        UnityEngine.Debug.Log("Marching cubes took " + sw.ElapsedMilliseconds + " ms");
-
-    }
-
+   
     [BurstCompile]
     private static void GetWindowsAroundPoint(in Vector3 pos, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
     {
@@ -134,11 +81,10 @@ public class MarchingSelectiveCubes : Marcher
 
     [BurstCompile]
     private static void March(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod interpolationMethod,
-        Dictionary<Vector3, float> selectedVertices,
+        HashSet<Vector3> selectedVertices,
         ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         Vector3[][] posWindows = new Vector3[8][];
-
         float[][] valueWindows = new float[8][];
 
         for (int i = 0; i < 8; i++)
@@ -147,9 +93,9 @@ public class MarchingSelectiveCubes : Marcher
             valueWindows[i] = new float[8];
         }
 
-        foreach (KeyValuePair<Vector3, float> pair in selectedVertices)
+        foreach (Vector3 point in selectedVertices)
         {
-            GetWindowsAroundPoint(pair.Key, resolution, ref posWindows, ref valueWindows);
+            GetWindowsAroundPoint(point, resolution, ref posWindows, ref valueWindows);
 
             for (int i = 0; i < 8; i++)
             {
@@ -160,31 +106,23 @@ public class MarchingSelectiveCubes : Marcher
 
 
     [BurstCompile]
-    protected static int GenerateConfigurationIndexFromWindow(in Dictionary<Vector3, float> selectedVertices, in Vector3[] window)
+    protected static int GenerateConfigurationIndexFromWindow(in HashSet<Vector3> selectedVertices, in Vector3[] window)
     {
         int configurationIndex = 0;
-        if (selectedVertices.ContainsKey(window[0])) { configurationIndex |= 1; }
-        if (selectedVertices.ContainsKey(window[1])) { configurationIndex |= 2; }
-        if (selectedVertices.ContainsKey(window[2])) { configurationIndex |= 4; }
-        if (selectedVertices.ContainsKey(window[3])) { configurationIndex |= 8; }
-        if (selectedVertices.ContainsKey(window[4])) { configurationIndex |= 16; }
-        if (selectedVertices.ContainsKey(window[5])) { configurationIndex |= 32; }
-        if (selectedVertices.ContainsKey(window[6])) { configurationIndex |= 64; }
-        if (selectedVertices.ContainsKey(window[7])) { configurationIndex |= 128; }
+        if (selectedVertices.Contains(window[0])) { configurationIndex |= 1; }
+        if (selectedVertices.Contains(window[1])) { configurationIndex |= 2; }
+        if (selectedVertices.Contains(window[2])) { configurationIndex |= 4; }
+        if (selectedVertices.Contains(window[3])) { configurationIndex |= 8; }
+        if (selectedVertices.Contains(window[4])) { configurationIndex |= 16; }
+        if (selectedVertices.Contains(window[5])) { configurationIndex |= 32; }
+        if (selectedVertices.Contains(window[6])) { configurationIndex |= 64; }
+        if (selectedVertices.Contains(window[7])) { configurationIndex |= 128; }
         return configurationIndex;
     }
 
     public override ProceduralMeshInfo March()
     {
-        if (!firstMarch)
-        {
-            MarchThroughValues();
-            firstMarch = true;
-        }
-        else
-        {
-            March(boundSize, resolution, interpolationThreshold, interpolationMethod, selectedVertices, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
-        }
+        March(boundSize, resolution, interpolationThreshold, interpolationMethod, selectedVertices, ref meshVertices, ref meshVerticesIndices, ref meshTriangles);
         return new ProceduralMeshInfo(meshVertices, meshTriangles);
     }
 }
