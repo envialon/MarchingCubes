@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Unity.Burst;
+using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class MarchingCubes : Marcher
@@ -9,7 +11,7 @@ public class MarchingCubes : Marcher
     public float opacity = 4f;
     public float brushRadius = 2;
 
-    public MarchingCubes(int boundSize, float resolution, float threshold,InterpolationMethod method) : base(boundSize, resolution, threshold, method)
+    public MarchingCubes(int boundSize, float resolution, float threshold, InterpolationMethod method) : base(boundSize, resolution, threshold, method)
     {
         Initialize();
         this.threshold = threshold;
@@ -18,32 +20,12 @@ public class MarchingCubes : Marcher
     protected override void Initialize()
     {
         base.Initialize();
-       InitializeValues(0);
+        InitializeValues(0);
     }
-
-    public override void AddSelectedVertex(in Vector3 pos)
-    {
-        Vector3Int[] points = GetBrushPoints(pos);
-        foreach (Vector3Int point in points)
-        {
-            values[point.x, point.y, point.z] += opacity;
-        }
-    }
-
-    public override void RemoveSelectedVertex(in Vector3 pos)
-    {
-        Vector3Int[] points = GetBrushPoints(pos);
-        foreach (Vector3Int point in points)
-        {
-            values[(int)point.x, (int)point.y, (int)point.z] -= opacity;
-        }
-    }
-
-
 
     [BurstCompile]
     private static void March(int boundSize, float resolution, float threshold, InterpolationMethod interpolationMethod,
-       in float[,,] values,
+       in NativeArray<float> values,
         ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         meshVerticesIndices.Clear();
@@ -90,7 +72,7 @@ public class MarchingCubes : Marcher
 
 
     [BurstCompile]
-    protected static int GenerateConfigurationIndexFromWindow(in float[,,] values, in Vector3[] window, int boundsize, float resolution, float threshold)
+    protected static int GenerateConfigurationIndexFromWindow(in NativeArray<float> values, in Vector3[] window, int boundsize, float resolution, float threshold)
     {
         int configurationIndex = 0;
 

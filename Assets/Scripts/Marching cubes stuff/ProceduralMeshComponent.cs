@@ -29,6 +29,7 @@ public class ProceduralMeshComponent : MonoBehaviour
     public int boundSize;
     public float resolution;
     public float threshold;
+    public float opacity;
 
 
     private void UpdateMarcherAttributes()
@@ -45,9 +46,6 @@ public class ProceduralMeshComponent : MonoBehaviour
         {
             case MarchingMethod.MarchingCubes:
                 marcher = new MarchingCubes(boundSize, resolution,  threshold, interpolationMethod);
-                break;
-            case MarchingMethod.MarchingOctTrees:
-                marcher = new MarchingOctTree(boundSize, resolution, threshold, interpolationMethod);
                 break;
             case MarchingMethod.MarchingSelectiveCubes:
                 marcher = new MarchingSelectiveCubes(boundSize, resolution, threshold, interpolationMethod);
@@ -83,11 +81,11 @@ public class ProceduralMeshComponent : MonoBehaviour
         ClickEventArgs eArgs = (ClickEventArgs)e;
         if (eArgs.clickType == ClickEventArgs.ClickType.RightClick)
         {
-            marcher.RemoveSelectedVertex(eArgs.pos);
+            marcher.RemoveSelectedVertex(eArgs.pos, opacity);
         }
         else if (eArgs.clickType == ClickEventArgs.ClickType.LeftClick)
         {
-            marcher.AddSelectedVertex(eArgs.pos);
+            marcher.AddSelectedVertex(eArgs.pos, opacity);
         }
         Marcher.ProceduralMeshInfo meshInfo = marcher.March();
         mesh.vertices = meshInfo.meshVertices;

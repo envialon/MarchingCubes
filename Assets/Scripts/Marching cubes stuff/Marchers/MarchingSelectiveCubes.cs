@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using UnityEngine;
 using Unity.Burst;
-using PlasticPipe.PlasticProtocol.Messages;
-using UnityEditor.PackageManager.UI;
+using Unity.Collections;
+using Unity.Mathematics;
+using UnityEngine;
 
 /// <summary>
 /// This Version of the Marcher only generates the mesh around the selected vertices
@@ -23,30 +23,10 @@ public class MarchingSelectiveCubes : Marcher
         selectedVertices = new HashSet<Vector3>();
     }
 
-    public override void AddSelectedVertex(in Vector3 pos)
-    {
-        if ((IsPositionValid(pos, boundSize) && !selectedVertices.Contains(pos)))
-        {
-            selectedVertices.Add(pos);
-            values[(int)pos.x, (int)pos.y, (int)pos.z] += threshold;
-        }
-    }
-
-    /// CANT CLICK ON THE VERTEX BECAUSE ITS UNDER THE MESH
-    public override void RemoveSelectedVertex(in Vector3 pos)
-    {
-        if (IsPositionValid(pos, boundSize))
-        {
-            selectedVertices.Remove(pos);
-            values[(int)pos.x, (int)pos.y, (int)pos.z] -= threshold;
-            Debug.Log("Removed");
-        }
-    }
-
     #region Marching
 
     [BurstCompile]
-    private static void GetWindowsAroundPoint(in Vector3 pos, in float[,,] values, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
+    private static void GetWindowsAroundPoint(in Vector3 pos, in NativeArray<float> values, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
     {
         int windowIndex = 0;
         for (float i = -resolution; i <= 0; i += resolution)
@@ -83,7 +63,7 @@ public class MarchingSelectiveCubes : Marcher
 
     [BurstCompile]
     private static void March(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod interpolationMethod,
-        HashSet<Vector3> selectedVertices, float[,,] values,
+        HashSet<Vector3> selectedVertices, NativeArray<float> values,
         ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
         Vector3[][] posWindows = new Vector3[8][];

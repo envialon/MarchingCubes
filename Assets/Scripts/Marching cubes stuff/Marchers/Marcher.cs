@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Unity.Burst;
+using Unity.Collections;
+using Unity.Mathematics;
+using static UnityEditor.Experimental.GraphView.Port;
 
 public abstract class Marcher
 {
@@ -32,15 +35,16 @@ public abstract class Marcher
     public List<int> meshTriangles;
     #endregion
 
+    public float opacity = 0.1f;
     public int boundSize;
     public float resolution;
     public float threshold;
     public InterpolationMethod interpolationMethod;
-    public float[,,] values;
+    public NativeArray<float> values;
 
     protected void InitializeValues(float defaultValue = 0)
     {
-        values = new float[boundSize, boundSize, boundSize];
+        values = new NativeArray<float>(boundSize * boundSize * boundSize, Allocator.Persistent);
         for (int i = 0; i < boundSize; i++)
         {
             for (int j = 0; j < boundSize; j++)
@@ -48,7 +52,7 @@ public abstract class Marcher
                 for (int k = 0; k < boundSize; k++)
                 {
                     float value = defaultValue == -1 ? UnityEngine.Random.Range(0f, 1f) : defaultValue;
-                    values[i, j, k] = value;
+                    SetValue(i, j, k, value, ref values);
                 }
             }
         }
@@ -77,17 +81,52 @@ public abstract class Marcher
         bool output = pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize && pos.z >= 0 && pos.z < boundSize;
         return output;
     }
- 
+
     [BurstCompile]
-    protected static float GetValue(in Vector3 pos, float resolution, in float[,,] values)
+    protected static bool IsPositionValid(in int3 pos, int boundSize)
     {
-        if (IsPositionValid(pos, values.GetLength(0)))
+        bool output = pos.x >= 0 && pos.x < boundSize && pos.y >= 0 && pos.y < boundSize && pos.y >= 0 && pos.y < boundSize && pos.z >= 0 && pos.z < boundSize;
+        return output;
+    }
+
+    #region Getters and setters
+
+    protected static void SetValue(int x, int y, int z, float value, ref NativeArray<float> values)
+    {
+        int boundSize = (int)math.pow(values.Length, 1f / 3f);
+        values[x + y * boundSize + z * boundSize * boundSize] = value;
+    }
+
+
+    protected static void SetValue(int3 pos, float value, ref NativeArray<float> values)
+    {
+        int boundSize = (int)math.pow(values.Length, 1f / 3f);
+        values[pos.x + pos.y * boundSize + pos.z * boundSize * boundSize] = value;
+    }
+
+
+    protected static float GetValue(in int3 pos, in NativeArray<float> values)
+    {
+        if (IsPositionValid(pos, values.Length))
         {
-            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-            return values[index.x, index.y, index.z];
+            int boundSize = (int)math.pow(values.Length, 1f / 3f);
+            return values[pos.x + pos.y * boundSize + pos.z * boundSize * boundSize];
         }
         return 0;
     }
+
+    [BurstCompile]
+    protected static float GetValue(in Vector3 pos, float resolution, in NativeArray<float> values)
+    {
+        if (IsPositionValid(pos, values.Length))
+        {
+            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
+            int boundSize = (int)math.pow(values.Length, 1f / 3f);
+            return values[index.x + index.y * boundSize + index.z * boundSize * boundSize];
+        }
+        return 0;
+    }
+    #endregion
 
     #region Interpolation 
 
@@ -101,7 +140,7 @@ public abstract class Marcher
     protected static Vector3 GetSmoothstep(Vector3 v1, Vector3 v2, float f1, float f2, float threshold)
     {
 
-        if(Mathf.Abs(threshold-f1)<0.0001f)
+        if (Mathf.Abs(threshold - f1) < 0.0001f)
         {
             return v1;
         }
@@ -109,7 +148,7 @@ public abstract class Marcher
         {
             return v2;
         }
-        if(Mathf.Abs(f1-f2)<0.0001f)
+        if (Mathf.Abs(f1 - f2) < 0.0001f)
         {
             return v1;
         }
@@ -146,22 +185,22 @@ public abstract class Marcher
     #endregion
 
     #region Click and Value manipulation stuff
-    private void ReactToClick(object sender, EventArgs e)
-    {
-        // Debug.Log("Reacting to click");
-        ClickEventArgs clickEventArgs = (ClickEventArgs)e;
-        if (clickEventArgs.clickType == ClickEventArgs.ClickType.LeftClick)
-        {
-            AddSelectedVertex(clickEventArgs.pos);
-        }
-        else if (clickEventArgs.clickType == ClickEventArgs.ClickType.RightClick)
-        {
-            RemoveSelectedVertex(clickEventArgs.pos);
-        }
-    }
+    //private void ReactToClick(object sender, EventArgs e)
+    //{
+    //    // Debug.Log("Reacting to click");
+    //    ClickEventArgs clickEventArgs = (ClickEventArgs)e;
+    //    if (clickEventArgs.clickType == ClickEventArgs.ClickType.LeftClick)
+    //    {
+    //        AddSelectedVertex(clickEventArgs.pos, opacity);
+    //    }
+    //    else if (clickEventArgs.clickType == ClickEventArgs.ClickType.RightClick)
+    //    {
+    //        RemoveSelectedVertex(clickEventArgs.pos, opacity);
+    //    }
+    //}
 
 
-    protected Vector3Int[] GetBrushPoints(in Vector3 pos,float brushRadius = 2)
+    protected Vector3Int[] GetBrushPoints(in Vector3 pos, float brushRadius = 2)
     {
         float squareRadius = brushRadius * brushRadius;
         HashSet<Vector3Int> output = new HashSet<Vector3Int>();
@@ -198,8 +237,24 @@ public abstract class Marcher
     }
 
 
-    public abstract void AddSelectedVertex(in Vector3 pos);
-    public abstract void RemoveSelectedVertex(in Vector3 pos);
+    public virtual void AddSelectedVertex(in Vector3 pos, float opacity)
+    {
+        Vector3Int[] points = GetBrushPoints(pos);
+        foreach (Vector3Int point in points)
+        {
+            int3 p = new int3(point.x, point.y, point.z);
+            SetValue(p, GetValue(p, values) + opacity, ref values);
+        }
+    }
+    public virtual void RemoveSelectedVertex(in Vector3 pos, float opacity)
+    {
+        Vector3Int[] points = GetBrushPoints(pos);
+        foreach (Vector3Int point in points)
+        {
+            int3 p = new int3(point.x, point.y, point.z);
+            SetValue(p, GetValue(p, values) - opacity, ref values);
+        }
+    }
     #endregion
 
     #region Marching cubes core methods
