@@ -5,7 +5,7 @@ using UnityEngine;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
-using static UnityEditor.Experimental.GraphView.Port;
+using UnityEngine.Experimental.Rendering;
 
 public abstract class Marcher
 {
@@ -20,6 +20,30 @@ public abstract class Marcher
             this.meshVertices = meshVertices.ToArray();
             this.meshTriangles = meshTriangles.ToArray();
         }
+
+        public ProceduralMeshInfo(MarchingCubesGPU.Triangle[] triangles)
+        {
+            List<Vector3> meshVerticesList = new List<Vector3>();
+            Dictionary<Vector3, int> vertexIndex = new Dictionary<Vector3, int>();
+            meshTriangles = new int[triangles.Length * 3];
+
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                MarchingCubesGPU.Triangle tri = triangles[i];
+
+                if (!vertexIndex.ContainsKey(tri.a)) { meshVerticesList.Add(tri.a); vertexIndex.Add(tri.a, meshVerticesList.Count - 1); }
+                if (!vertexIndex.ContainsKey(tri.b)) { meshVerticesList.Add(tri.b); vertexIndex.Add(tri.b, meshVerticesList.Count - 1); }
+                if (!vertexIndex.ContainsKey(tri.c)) { meshVerticesList.Add(tri.c); vertexIndex.Add(tri.c, meshVerticesList.Count - 1); }
+
+                int index = i * 3;
+                meshTriangles[index] = vertexIndex[tri.a];
+                meshTriangles[index + 1] = vertexIndex[tri.b];
+                meshTriangles[index + 2] = vertexIndex[tri.c];
+
+            }
+            meshVertices = meshVerticesList.ToArray(); ;
+        }
+
     }
 
     public enum InterpolationMethod
@@ -42,20 +66,23 @@ public abstract class Marcher
     public InterpolationMethod interpolationMethod;
     public NativeArray<float> values;
 
+
+
     protected void InitializeValues(float defaultValue = 0)
     {
-        values = new NativeArray<float>(boundSize * boundSize * boundSize, Allocator.Persistent);
-        for (int i = 0; i < boundSize; i++)
-        {
-            for (int j = 0; j < boundSize; j++)
-            {
-                for (int k = 0; k < boundSize; k++)
-                {
-                    float value = defaultValue == -1 ? UnityEngine.Random.Range(0f, 1f) : defaultValue;
-                    SetValue(i, j, k, value, ref values);
-                }
-            }
-        }
+        //values = new NativeArray<float>(boundSize * boundSize * boundSize, Allocator.Persistent);
+        //for (int i = 0; i < boundSize; i++)
+        //{
+        //    for (int j = 0; j < boundSize; j++)
+        //    {
+        //        for (int k = 0; k < boundSize; k++)
+        //        {
+        //            float value = defaultValue == -1 ? UnityEngine.Random.Range(0f, 1f) : defaultValue;
+        //            SetValue(i, j, k, value, ref values);
+        //        }
+        //    }
+        //}
+        values = new NativeArray<float>(NoiseGenerator.GetNoise(boundSize), Allocator.Persistent);
     }
 
     protected virtual void Initialize()
@@ -72,6 +99,7 @@ public abstract class Marcher
         this.resolution = resolution;
         this.threshold = interpolationThreshold;
         this.interpolationMethod = method;
+        InitializeValues();
 
     }
 

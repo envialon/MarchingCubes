@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class MarchingCubes : Marcher
 {
-    public float opacity = 4f;
+
     public float brushRadius = 2;
 
     public MarchingCubes(int boundSize, float resolution, float threshold, InterpolationMethod method) : base(boundSize, resolution, threshold, method)

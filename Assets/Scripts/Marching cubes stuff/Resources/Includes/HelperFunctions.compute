@@ -1,0 +1,10 @@
+
+static const uint numThreads = 8;
+
+int _BoundSize;
+
+int indexFromCoord(uint3 pos)
+{
+    return pos.x + pos.y * _BoundSize + pos.z * _BoundSize * _BoundSize;
+}
+

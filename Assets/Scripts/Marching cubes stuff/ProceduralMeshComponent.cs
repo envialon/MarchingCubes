@@ -8,7 +8,7 @@ public class ProceduralMeshComponent : MonoBehaviour
     {
         MarchingCubes,
         MarchingSelectiveCubes,
-        MarchingOctTrees
+        MarchingGPU
     }
 
     #region meshStuff
@@ -49,6 +49,9 @@ public class ProceduralMeshComponent : MonoBehaviour
                 break;
             case MarchingMethod.MarchingSelectiveCubes:
                 marcher = new MarchingSelectiveCubes(boundSize, resolution, threshold, interpolationMethod);
+                break;
+            case MarchingMethod.MarchingGPU:
+                marcher = new MarchingCubesGPU(boundSize, resolution, threshold, interpolationMethod);  
                 break;
         }
     }
