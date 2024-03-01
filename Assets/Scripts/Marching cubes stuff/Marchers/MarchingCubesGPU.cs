@@ -61,6 +61,10 @@ public class MarchingCubesGPU : Marcher
         LoadComputeShader();
     }
 
+    ~MarchingCubesGPU() {
+        values.Dispose();
+        ReleaseBuffers();
+    }
 
     private int ReadTriangleCount()
     {

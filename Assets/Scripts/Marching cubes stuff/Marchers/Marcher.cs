@@ -112,6 +112,11 @@ public abstract class Marcher
 
     }
 
+    ~Marcher()
+    {
+        values.Dispose();
+    }
+
     [BurstCompile]
     protected static bool IsPositionValid(in Vector3 pos, int boundSize)
     {
