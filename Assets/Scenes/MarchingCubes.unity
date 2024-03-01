@@ -420,10 +420,10 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: d2a263cad134c8d4498b9446d584e95b, type: 2}
   marchingMethod: 2
   interpolationMethod: 0
-  boundSize: 25
+  boundSize: 16
   resolution: 1.5
   threshold: 0.5
-  opacity: 0
+  opacity: 1
 --- !u!23 &1802079939
 MeshRenderer:
   m_ObjectHideFlags: 0

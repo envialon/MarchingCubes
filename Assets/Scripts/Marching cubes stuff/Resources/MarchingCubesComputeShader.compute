@@ -6,7 +6,7 @@
 
 float _Threshold;
 
-float3 _WorldPos;
+float _Step;
 
 StructuredBuffer<float> _Values;
 
@@ -27,7 +27,7 @@ float3 interpolation(float3 p1, float3 value1, float3 p2, float value2)
     return (p1 + (_Threshold - value1) * (p2 - p1) / (value2 - value1));
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(numThreads, numThreads, numThreads)]
 void MarchCubes(uint3 id : SV_DispatchThreadID)
 {
     if (InvalidCube(id))
@@ -79,9 +79,9 @@ void MarchCubes(uint3 id : SV_DispatchThreadID)
         
         Triangle tri;
         
-        tri.a = interpolation(cornerOffsets[edge00], cubeValues[edge00], cornerOffsets[edge01], cubeValues[edge01]) + _WorldPos;
-        tri.b = interpolation(cornerOffsets[edge10], cubeValues[edge10], cornerOffsets[edge11], cubeValues[edge11]) + _WorldPos;
-        tri.c = interpolation(cornerOffsets[edge20], cubeValues[edge20], cornerOffsets[edge21], cubeValues[edge21]) + _WorldPos;
+        tri.a = interpolation(cornerOffsets[edge00] * _Step, cubeValues[edge00], cornerOffsets[edge01] * _Step, cubeValues[edge01]) + id * _Step;
+        tri.b = interpolation(cornerOffsets[edge10] * _Step, cubeValues[edge10], cornerOffsets[edge11] * _Step, cubeValues[edge11]) + id * _Step;
+        tri.c = interpolation(cornerOffsets[edge20] * _Step, cubeValues[edge20], cornerOffsets[edge21] * _Step, cubeValues[edge21]) + id * _Step;
         _Triangles.Append(tri);
     }
     
