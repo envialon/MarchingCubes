@@ -9,19 +9,16 @@ using UnityEngine;
 public class MarchingCubes : Marcher
 {
 
-    public float brushRadius = 2;
 
     public MarchingCubes(int boundSize, float resolution, float threshold, InterpolationMethod method) : base(boundSize, resolution, threshold, method)
     {
-        Initialize();
-        this.threshold = threshold;
     }
 
-    protected override void Initialize()
+    public MarchingCubes(Marcher other) : base(other)
     {
-        base.Initialize();
-        InitializeValues(0);
     }
+
+
 
     [BurstCompile]
     private static void March(int boundSize, float resolution, float threshold, InterpolationMethod interpolationMethod,

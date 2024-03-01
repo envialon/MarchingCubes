@@ -13,13 +13,17 @@ public class MarchingSelectiveCubes : Marcher
 
     public MarchingSelectiveCubes(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method) : base(boundSize, resolution, interpolationThreshold, method)
     {
-        Initialize();
+        InitializeSelectedVertices();
     }
 
-    protected override void Initialize()
+    public MarchingSelectiveCubes(Marcher other): base(other)
     {
-        base.Initialize();
-        InitializeValues(1f);
+        InitializeSelectedVertices();
+    }
+
+   
+    private void InitializeSelectedVertices()
+    {
         selectedVertices = new HashSet<Vector3>();
     }
 

@@ -1,7 +1,10 @@
 using System;
+using System.Runtime.InteropServices;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.XR;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class ProceduralMeshComponent : MonoBehaviour
 {
     public enum MarchingMethod
@@ -38,21 +41,44 @@ public class ProceduralMeshComponent : MonoBehaviour
         marcher.resolution = resolution;
         marcher.threshold = threshold;
         marcher.interpolationMethod = interpolationMethod;
+
+        if (resolution <= 0)
+        {
+            throw new Exception("Resolution can't be <= 0");
+        }
     }
 
     private void InitializeMarcher()
     {
-        switch (marchingMethod)
+        if (marcher is null)
         {
-            case MarchingMethod.MarchingCubes:
-                marcher = new MarchingCubes(boundSize, resolution,  threshold, interpolationMethod);
-                break;
-            case MarchingMethod.MarchingSelectiveCubes:
-                marcher = new MarchingSelectiveCubes(boundSize, resolution, threshold, interpolationMethod);
-                break;
-            case MarchingMethod.MarchingGPU:
-                marcher = new MarchingCubesGPU(boundSize, resolution, threshold, interpolationMethod);  
-                break;
+            switch (marchingMethod)
+            {
+                case MarchingMethod.MarchingCubes:
+                    marcher = new MarchingCubes(boundSize, resolution, threshold, interpolationMethod);
+                    break;
+                case MarchingMethod.MarchingSelectiveCubes:
+                    marcher = new MarchingSelectiveCubes(boundSize, resolution, threshold, interpolationMethod);
+                    break;
+                case MarchingMethod.MarchingGPU:
+                    marcher = new MarchingCubesGPU(boundSize, resolution, threshold, interpolationMethod);
+                    break;
+            }
+        }
+        else
+        {
+            switch (marchingMethod)
+            {
+                case MarchingMethod.MarchingCubes:
+                    marcher = new MarchingCubes(marcher);
+                    break;
+                case MarchingMethod.MarchingSelectiveCubes:
+                    marcher = new MarchingSelectiveCubes(marcher);
+                    break;
+                case MarchingMethod.MarchingGPU:
+                    marcher = new MarchingCubesGPU(marcher);
+                    break;
+            }
         }
     }
 
@@ -60,26 +86,49 @@ public class ProceduralMeshComponent : MonoBehaviour
     {
         ClickOnScene.OnClickOnScene += ReactToClick;
 
-        meshCollider = this.gameObject.AddComponent<MeshCollider>();
+        meshCollider = GetComponent<MeshCollider>();
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
 
         mesh = new Mesh();
-        meshFilter.mesh = mesh;
-        meshCollider.sharedMesh = mesh;
-        meshRenderer.material = material;
 
         InitializeMarcher();
     }
 
-    private void Start()
+    private void OnEnable()
     {
         Initialize();
     }
-    private void ReactToClick(object sender, EventArgs e)
+
+    private void OnValidate()
+    {
+        Initialize();
+    }
+
+    private void Start()
+    {
+        GenerateMesh();
+    }
+
+    public void GenerateMesh()
     {
         mesh.Clear();
         UpdateMarcherAttributes();
+        Marcher.ProceduralMeshInfo meshInfo = marcher.March();
+        mesh.vertices = meshInfo.meshVertices;
+        mesh.triangles = meshInfo.meshTriangles;
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        meshFilter.mesh = mesh;
+        meshRenderer.material = material;
+        if (mesh.vertexCount >= 3)
+        {
+            meshCollider.sharedMesh = mesh;
+        }
+    }
+
+    private void ReactToClick(object sender, EventArgs e)
+    {
 
         ClickEventArgs eArgs = (ClickEventArgs)e;
         if (eArgs.clickType == ClickEventArgs.ClickType.RightClick)
@@ -90,14 +139,26 @@ public class ProceduralMeshComponent : MonoBehaviour
         {
             marcher.AddSelectedVertex(eArgs.pos, opacity);
         }
-        Marcher.ProceduralMeshInfo meshInfo = marcher.March();
-        mesh.vertices = meshInfo.meshVertices;
-        mesh.triangles = meshInfo.meshTriangles;
-        mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
-        if (mesh.vertexCount >= 3)
+        GenerateMesh();
+    }
+
+    public void RegenerateValues()
+    {
+        marcher.InitializeValues();
+        GenerateMesh();
+    }
+}
+
+[CustomEditor(typeof(ProceduralMeshComponent))]
+class ProcMeshEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        base.OnInspectorGUI();
+        if (GUILayout.Button("Regenerate values"))
         {
-            meshCollider.sharedMesh = mesh;
+            ProceduralMeshComponent t = (ProceduralMeshComponent)target;
+            t.RegenerateValues();
         }
     }
 }

@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
-using UnityEngine.Experimental.Rendering;
 
 public abstract class Marcher
 {
@@ -68,7 +66,7 @@ public abstract class Marcher
 
 
 
-    protected void InitializeValues(float defaultValue = 0)
+    public void InitializeValues(float defaultValue = 0)
     {
         //values = new NativeArray<float>(boundSize * boundSize * boundSize, Allocator.Persistent);
         //for (int i = 0; i < boundSize; i++)
@@ -85,7 +83,7 @@ public abstract class Marcher
         values = new NativeArray<float>(NoiseGenerator.GetNoise(boundSize), Allocator.Persistent);
     }
 
-    protected virtual void Initialize()
+    protected virtual void InitializeMeshAttributes()
     {
         meshVerticesIndices = new Dictionary<Vector3, int>();
         meshVertices = new List<Vector3>();
@@ -94,12 +92,23 @@ public abstract class Marcher
 
     public Marcher(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method)
     {
-        Initialize();
+        InitializeMeshAttributes();
         this.boundSize = boundSize;
         this.resolution = resolution;
         this.threshold = interpolationThreshold;
         this.interpolationMethod = method;
         InitializeValues();
+    }
+
+    public Marcher(Marcher other)
+    {
+        InitializeMeshAttributes();
+        this.values = new NativeArray<float>(other.values.Length, Allocator.Persistent);
+        this.values.CopyFrom(other.values);
+        this.boundSize = other.boundSize;
+        this.resolution = other.resolution;
+        this.threshold  = other.threshold;  
+        this.interpolationMethod = other.interpolationMethod;
 
     }
 
@@ -149,7 +158,7 @@ public abstract class Marcher
         if (IsPositionValid(pos, values.Length))
         {
             Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-            int boundSize = (int)math.pow(values.Length, 1f / 3f);
+            int boundSize = (int)math.pow(values.Length, 1f / 3f)-1;
             return values[index.x + index.y * boundSize + index.z * boundSize * boundSize];
         }
         return 0;

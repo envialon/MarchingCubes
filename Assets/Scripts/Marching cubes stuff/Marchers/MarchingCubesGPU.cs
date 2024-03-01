@@ -42,7 +42,7 @@ public class MarchingCubesGPU : Marcher
     }
 
 
-    public MarchingCubesGPU(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method) : base(boundSize, resolution, interpolationThreshold, method)
+    private void LoadComputeShader()
     {
         marchingCubesComputeShader = (ComputeShader)Resources.Load("MarchingCubesComputeShader");
         if (marchingCubesComputeShader == null)
@@ -50,6 +50,17 @@ public class MarchingCubesGPU : Marcher
             throw new System.Exception("Failed to load the marching cubes compute shader.");
         }
     }
+
+    public MarchingCubesGPU(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method) : base(boundSize, resolution, interpolationThreshold, method)
+    {
+        LoadComputeShader();
+    }
+
+    public MarchingCubesGPU(Marcher other) : base(other)
+    {
+        LoadComputeShader();
+    }
+
 
     private int ReadTriangleCount()
     {
@@ -61,7 +72,7 @@ public class MarchingCubesGPU : Marcher
 
     public override ProceduralMeshInfo March()
     {
-        Stopwatch sw = new Stopwatch() ;
+        Stopwatch sw = new Stopwatch();
         sw.Start();
 
         CreateBuffers();
@@ -87,7 +98,7 @@ public class MarchingCubesGPU : Marcher
         msSum += sw.ElapsedMilliseconds;
         long avgMs = msSum / marchCounts;
         UnityEngine.Debug.ClearDeveloperConsole();
-        UnityEngine.Debug.Log("Marching Cubes avg compute time " + avgMs + "ms"); 
+        UnityEngine.Debug.Log("Marching Cubes avg compute time " + avgMs + "ms");
 
         return new ProceduralMeshInfo(triangles);
     }
