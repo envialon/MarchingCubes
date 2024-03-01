@@ -367,8 +367,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.47134, y: -0.0018646342, z: 0.0009420159, w: -0.88194907}
-  m_LocalPosition: {x: 5.0349817, y: 6.6273437, z: -1.0050256}
+  m_LocalRotation: {x: 0.41128987, y: 0.11945387, z: -0.05447437, w: 0.902}
+  m_LocalPosition: {x: 21.464096, y: 54.354195, z: -15.817383}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -420,9 +420,9 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: d2a263cad134c8d4498b9446d584e95b, type: 2}
   marchingMethod: 2
   interpolationMethod: 0
-  boundSize: 16
-  resolution: 1.5
-  threshold: 0.5
+  boundSize: 64
+  resolution: 1
+  threshold: 1
   opacity: 1
 --- !u!23 &1802079939
 MeshRenderer:

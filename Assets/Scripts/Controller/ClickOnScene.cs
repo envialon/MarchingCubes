@@ -27,7 +27,7 @@ public class ClickOnScene : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.Mouse1))
+        if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1))
         {
             if (Input.GetKey(KeyCode.Mouse0))
             {

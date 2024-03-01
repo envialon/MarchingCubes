@@ -1,11 +1,15 @@
+using System.Diagnostics;
+using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
+
 
 public class MarchingCubesGPU : Marcher
 {
     public int numThreads = 8;
 
-
+    private static long msSum = 0;
+    private static long marchCounts = 0;
     private static ComputeShader marchingCubesComputeShader;
 
     public struct Triangle
@@ -57,6 +61,9 @@ public class MarchingCubesGPU : Marcher
 
     public override ProceduralMeshInfo March()
     {
+        Stopwatch sw = new Stopwatch() ;
+        sw.Start();
+
         CreateBuffers();
         marchingCubesComputeShader.SetBuffer(0, "_Triangles", triangleBuffer);
         marchingCubesComputeShader.SetBuffer(0, "_Values", valueBuffer);
@@ -74,6 +81,13 @@ public class MarchingCubesGPU : Marcher
         triangleBuffer.GetData(triangles);
 
         ReleaseBuffers();
+
+        sw.Stop();
+        marchCounts++;
+        msSum += sw.ElapsedMilliseconds;
+        long avgMs = msSum / marchCounts;
+        UnityEngine.Debug.ClearDeveloperConsole();
+        UnityEngine.Debug.Log("Marching Cubes avg compute time " + avgMs + "ms"); 
 
         return new ProceduralMeshInfo(triangles);
     }
