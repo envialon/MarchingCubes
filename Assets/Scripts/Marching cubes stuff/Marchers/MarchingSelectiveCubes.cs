@@ -30,7 +30,7 @@ public class MarchingSelectiveCubes : Marcher
     #region Marching
 
     [BurstCompile]
-    private static void GetWindowsAroundPoint(in Vector3 pos, in NativeArray<float> values, float resolution, ref Vector3[][] posWindows, ref float[][] valueWindows)
+    private static void GetWindowsAroundPoint(in float3 pos, in NativeArray<float> values, float resolution, ref float3[][] posWindows, ref float[][] valueWindows)
     {
         int windowIndex = 0;
         for (float i = -resolution; i <= 0; i += resolution)
@@ -41,24 +41,24 @@ public class MarchingSelectiveCubes : Marcher
 
                 for (float k = -resolution; k <= 0; k += resolution)
                 {
-                    Vector3 currentPos = pos + new Vector3(i, j, k);
+                    float3 currentPos = pos + new float3(i, j, k);
                     posWindows[windowIndex][0] = currentPos;
-                    posWindows[windowIndex][1] = currentPos + new Vector3(resolution, 0, 0);
-                    posWindows[windowIndex][2] = currentPos + new Vector3(resolution, resolution, 0);
-                    posWindows[windowIndex][3] = currentPos + new Vector3(0, resolution, 0);
-                    posWindows[windowIndex][4] = currentPos + new Vector3(0, 0, resolution);
-                    posWindows[windowIndex][5] = currentPos + new Vector3(resolution, 0, resolution);
-                    posWindows[windowIndex][6] = currentPos + new Vector3(resolution, resolution, resolution);
-                    posWindows[windowIndex][7] = currentPos + new Vector3(0, resolution, resolution);
+                    posWindows[windowIndex][1] = currentPos + new float3(resolution, 0, 0);
+                    posWindows[windowIndex][2] = currentPos + new float3(resolution, resolution, 0);
+                    posWindows[windowIndex][3] = currentPos + new float3(0, resolution, 0);
+                    posWindows[windowIndex][4] = currentPos + new float3(0, 0, resolution);
+                    posWindows[windowIndex][5] = currentPos + new float3(resolution, 0, resolution);
+                    posWindows[windowIndex][6] = currentPos + new float3(resolution, resolution, resolution);
+                    posWindows[windowIndex][7] = currentPos + new float3(0, resolution, resolution);
 
-                    valueWindows[windowIndex][0] = GetValue(posWindows[windowIndex][0], resolution, values);
-                    valueWindows[windowIndex][1] = GetValue(posWindows[windowIndex][1], resolution, values);
-                    valueWindows[windowIndex][2] = GetValue(posWindows[windowIndex][2], resolution, values);
-                    valueWindows[windowIndex][3] = GetValue(posWindows[windowIndex][3], resolution, values);
-                    valueWindows[windowIndex][4] = GetValue(posWindows[windowIndex][4], resolution, values);
-                    valueWindows[windowIndex][5] = GetValue(posWindows[windowIndex][5], resolution, values);
-                    valueWindows[windowIndex][6] = GetValue(posWindows[windowIndex][6], resolution, values);
-                    valueWindows[windowIndex][7] = GetValue(posWindows[windowIndex][7], resolution, values);
+                    valueWindows[windowIndex][0] = GetValue(posWindows[windowIndex][0],  values);
+                    valueWindows[windowIndex][1] = GetValue(posWindows[windowIndex][1],  values);
+                    valueWindows[windowIndex][2] = GetValue(posWindows[windowIndex][2],  values);
+                    valueWindows[windowIndex][3] = GetValue(posWindows[windowIndex][3],  values);
+                    valueWindows[windowIndex][4] = GetValue(posWindows[windowIndex][4],  values);
+                    valueWindows[windowIndex][5] = GetValue(posWindows[windowIndex][5],  values);
+                    valueWindows[windowIndex][6] = GetValue(posWindows[windowIndex][6],  values);
+                    valueWindows[windowIndex][7] = GetValue(posWindows[windowIndex][7],  values);
                     windowIndex++;
                 }
             }
@@ -70,14 +70,14 @@ public class MarchingSelectiveCubes : Marcher
         HashSet<Vector3> selectedVertices, NativeArray<float> values,
         ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
-        Vector3[][] posWindows = new Vector3[8][];
+        float3[][] posWindows = new float3[8][];
         float[][] valueWindows = new float[8][];
 
         HashSet<Vector3> marchedPoints = new HashSet<Vector3>();
 
         for (int i = 0; i < 8; i++)
         {
-            posWindows[i] = new Vector3[8];
+            posWindows[i] = new float3[8];
             valueWindows[i] = new float[8];
         }
 
@@ -108,7 +108,7 @@ public class MarchingSelectiveCubes : Marcher
 
 
     [BurstCompile]
-    protected static int GenerateConfigurationIndexFromWindow(in HashSet<Vector3> selectedVertices, in Vector3[] window)
+    protected static int GenerateConfigurationIndexFromWindow(in HashSet<Vector3> selectedVertices, in float3[] window)
     {
         int configurationIndex = 0;
         if (selectedVertices.Contains(window[0])) { configurationIndex |= 1; }

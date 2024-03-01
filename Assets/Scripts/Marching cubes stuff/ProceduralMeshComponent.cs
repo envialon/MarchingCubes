@@ -99,6 +99,10 @@ public class ProceduralMeshComponent : MonoBehaviour
     {
         Initialize();
     }
+    private void OnDisable()
+    {
+        mesh.Clear();
+    }
 
     private void OnValidate()
     {

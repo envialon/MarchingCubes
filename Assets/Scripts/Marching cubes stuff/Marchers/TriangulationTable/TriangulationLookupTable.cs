@@ -2,9 +2,9 @@ using System.Linq;
 using System.Collections;
 using Unity.Collections;
 using Unity.VisualScripting;
-public struct TriangulationLookupTable
+public class TriangulationLookupTable
 { 
-    private static int[] eT= {
+    public static int[] eT= {
  0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
  0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
  0x190, 0x99 , 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c,
@@ -42,7 +42,8 @@ public struct TriangulationLookupTable
     {
         return triangleTable[i1 * 16 + i2];
     }
-    private static int[] tT = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+
+    public static int[] tT = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
  0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
  0, 1, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
  1, 8, 3, 9, 8, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -300,7 +301,28 @@ public struct TriangulationLookupTable
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     };
 
-    public static NativeArray<int> edgeTable = new NativeArray<int>(eT, Allocator.Persistent);
+
+    public  static NativeArray<int> edgeTable = new NativeArray<int>(eT, Allocator.Persistent);
     public static NativeArray<int> triangleTable = new NativeArray<int>(tT, Allocator.Persistent);
+
+    public TriangulationLookupTable instance;
+
+    TriangulationLookupTable()
+    {
+        if(instance == null)
+        {
+            instance = new TriangulationLookupTable();
+        }
+        else
+        {
+            throw new System.Exception("Trying to instantiate TriangulationLookupTable twice");
+        }
+    }
+
+    ~TriangulationLookupTable()
+    {
+        edgeTable.Dispose();
+        triangleTable.Dispose();
+    }
 
 }

@@ -147,26 +147,22 @@ public abstract class Marcher
     }
 
 
+    [BurstCompile]
     protected static float GetValue(in int3 pos, in NativeArray<float> values)
     {
-        if (IsPositionValid(pos, values.Length))
+        int boundSize = (int)math.pow(values.Length, 1f / 3f);
+        if (IsPositionValid(pos, boundSize))
         {
-            int boundSize = (int)math.pow(values.Length, 1f / 3f);
             return values[pos.x + pos.y * boundSize + pos.z * boundSize * boundSize];
         }
         return 0;
     }
 
     [BurstCompile]
-    protected static float GetValue(in Vector3 pos, float resolution, in NativeArray<float> values)
+    protected static float GetValue(in float3 pos, in NativeArray<float> values)
     {
-        if (IsPositionValid(pos, values.Length))
-        {
-            Vector3Int index = Vector3Int.FloorToInt(pos / resolution);
-            int boundSize = (int)math.pow(values.Length, 1f / 3f)-1;
-            return values[index.x + index.y * boundSize + index.z * boundSize * boundSize];
-        }
-        return 0;
+        int3 index = (int3)pos;
+        return GetValue(index, values);
     }
     #endregion
 
@@ -227,22 +223,7 @@ public abstract class Marcher
     #endregion
 
     #region Click and Value manipulation stuff
-    //private void ReactToClick(object sender, EventArgs e)
-    //{
-    //    // Debug.Log("Reacting to click");
-    //    ClickEventArgs clickEventArgs = (ClickEventArgs)e;
-    //    if (clickEventArgs.clickType == ClickEventArgs.ClickType.LeftClick)
-    //    {
-    //        AddSelectedVertex(clickEventArgs.pos, opacity);
-    //    }
-    //    else if (clickEventArgs.clickType == ClickEventArgs.ClickType.RightClick)
-    //    {
-    //        RemoveSelectedVertex(clickEventArgs.pos, opacity);
-    //    }
-    //}
-
-
-    protected Vector3Int[] GetBrushPoints(in Vector3 pos, float brushRadius = 2)
+     protected Vector3Int[] GetBrushPoints(in Vector3 pos, float brushRadius = 2)
     {
         float squareRadius = brushRadius * brushRadius;
         HashSet<Vector3Int> output = new HashSet<Vector3Int>();
@@ -317,11 +298,11 @@ public abstract class Marcher
     }
 
     [BurstCompile]
-    protected static int Poligonize(int configurationIndex, in Vector3[] window, in float[] cornerValues,
+    protected static int Poligonize(int configurationIndex, in float3[] window, in float[] cornerValues,
                                     float threshold, InterpolationMethod interpolationMethod,
                                     ref List<Vector3> meshVertices, ref Dictionary<Vector3, int> meshVerticesIndices, ref List<int> meshTriangles)
     {
-        Vector3[] edgeVertices = new Vector3[12];
+        float3[] edgeVertices = new float3[12];
 
         int edgeIndex = TriangulationLookupTable.edgeTable[configurationIndex];
 
@@ -383,7 +364,7 @@ public abstract class Marcher
     }
 
     [BurstCompile]
-    protected static int CreateTriangles(int index, in Vector3[] vertices, List<Vector3> meshVertices, Dictionary<Vector3, int> meshVerticesIndices, List<int> meshTriangles)
+    protected static int CreateTriangles(int index, in float3[] vertices, List<Vector3> meshVertices, Dictionary<Vector3, int> meshVerticesIndices, List<int> meshTriangles)
     {
         int numberOfTriangles = 0;
         ;
