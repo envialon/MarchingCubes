@@ -1,19 +1,10 @@
 using System;
-using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.XR;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class ProceduralMeshComponent : MonoBehaviour
 {
-    public enum MarchingMethod
-    {
-        MarchingCubes,
-        MarchingSelectiveCubes,
-        MarchingGPU
-    }
-
     #region meshStuff
     protected MeshCollider meshCollider;
     protected MeshFilter meshFilter;
@@ -22,12 +13,21 @@ public class ProceduralMeshComponent : MonoBehaviour
     public Material material;
     #endregion
 
-    private Marcher marcher;
-
     #region enums
-    public MarchingMethod marchingMethod;
+    
+    //duplicate enum for the inspector (I don't like this) :c
+    public enum MarcherType
+    {
+        MarchingCubes,
+        MarchingCubesGPU
+    }
+
+    public MarcherType type;
     public Marcher.InterpolationMethod interpolationMethod;
     #endregion
+
+    [SerializeField]
+    public MarcherStrategy marcherStrategy;
 
     public int boundSize;
     public float resolution;
@@ -35,42 +35,14 @@ public class ProceduralMeshComponent : MonoBehaviour
     public float opacity;
 
 
-    private void UpdateMarcherAttributes()
-    {
-        marcher.boundSize = boundSize;
-        marcher.resolution = resolution;
-        marcher.threshold = threshold;
-        marcher.interpolationMethod = interpolationMethod;
-
-        if (resolution <= 0)
-        {
-            throw new Exception("Resolution can't be <= 0");
-        }
-    }
 
     private void InitializeMarcher()
     {
-        if (marcher is null)
-        {
-            marcher = new MarchingCubes(boundSize, resolution, threshold, interpolationMethod);
-        }
-        else
-        {
-            switch (marchingMethod)
-            {
-                case MarchingMethod.MarchingCubes:
-                    marcher = new MarchingCubes(marcher);
-                    break;
-                //case MarchingMethod.MarchingSelectiveCubes:
-                //    marcher = new MarchingSelectiveCubes(marcher);
-                //    break;
-                case MarchingMethod.MarchingGPU:
-                    marcher = new MarchingCubesGPU(marcher);
-                    break;
-            }
-        }
+
+        marcherStrategy = new MarcherStrategy(boundSize, resolution, threshold, (MarcherStrategy.MarcherType)type);
     }
 
+   
     private void Initialize()
     {
         ClickOnScene.OnClickOnScene += ReactToClick;
@@ -80,7 +52,6 @@ public class ProceduralMeshComponent : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
 
         mesh = new Mesh();
-
         InitializeMarcher();
     }
 
@@ -95,7 +66,7 @@ public class ProceduralMeshComponent : MonoBehaviour
 
     private void OnValidate()
     {
-        Initialize();
+        InitializeMarcher();
     }
 
     private void Start()
@@ -106,8 +77,8 @@ public class ProceduralMeshComponent : MonoBehaviour
     public void GenerateMesh()
     {
         mesh.Clear();
-        UpdateMarcherAttributes();
-        Marcher.ProceduralMeshInfo meshInfo = marcher.March();
+        marcherStrategy.UpdateAttributes(boundSize, resolution, threshold, (MarcherStrategy.MarcherType)type);
+        ProceduralMeshInfo meshInfo = marcherStrategy.March();
         mesh.vertices = meshInfo.meshVertices;
         mesh.triangles = meshInfo.meshTriangles;
         mesh.RecalculateNormals();
@@ -126,18 +97,18 @@ public class ProceduralMeshComponent : MonoBehaviour
         ClickEventArgs eArgs = (ClickEventArgs)e;
         if (eArgs.clickType == ClickEventArgs.ClickType.RightClick)
         {
-            marcher.RemoveSelectedVertex(eArgs.pos, opacity);
+            marcherStrategy.RemoveSelectedVertex(eArgs.pos, opacity);
         }
         else if (eArgs.clickType == ClickEventArgs.ClickType.LeftClick)
         {
-            marcher.AddSelectedVertex(eArgs.pos, opacity);
+            marcherStrategy.AddSelectedVertex(eArgs.pos, opacity);
         }
         GenerateMesh();
     }
 
     public void RegenerateValues()
     {
-        marcher.InitializeValues();
+        marcherStrategy.InitializeValues();
         GenerateMesh();
     }
 }

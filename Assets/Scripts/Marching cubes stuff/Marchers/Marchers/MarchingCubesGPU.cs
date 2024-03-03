@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Threading;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -25,7 +26,13 @@ public class MarchingCubesGPU : Marcher
     ComputeBuffer triangleCountBuffer;
     ComputeBuffer valueBuffer;
 
-    private void CreateBuffers()
+
+    public MarchingCubesGPU()
+    {
+        LoadComputeShader();
+    }
+
+    private void CreateBuffers(int boundSize)
     {
         int boundSizeCubed = boundSize * boundSize * boundSize;
         triangleBuffer = new ComputeBuffer(5 * boundSizeCubed, Triangle.SizeOf, ComputeBufferType.Append);
@@ -50,22 +57,7 @@ public class MarchingCubesGPU : Marcher
             throw new System.Exception("Failed to load the marching cubes compute shader.");
         }
     }
-
-    public MarchingCubesGPU(int boundSize, float resolution, float interpolationThreshold, InterpolationMethod method) : base(boundSize, resolution, interpolationThreshold, method)
-    {
-        LoadComputeShader();
-    }
-
-    public MarchingCubesGPU(Marcher other) : base(other)
-    {
-        LoadComputeShader();
-    }
-
-    ~MarchingCubesGPU() {
-        values.Dispose();
-        ReleaseBuffers();
-    }
-
+      
     private int ReadTriangleCount()
     {
         int[] triCount = { 0 };
@@ -74,22 +66,22 @@ public class MarchingCubesGPU : Marcher
         return triCount[0];
     }
 
-    public override ProceduralMeshInfo March()
+    public override ProceduralMeshInfo March(in NativeArray<float> values, MarcherParams parameters)
     {
         Stopwatch sw = new Stopwatch();
         sw.Start();
 
-        CreateBuffers();
+        CreateBuffers(parameters.boundSize);
         marchingCubesComputeShader.SetBuffer(0, "_Triangles", triangleBuffer);
         marchingCubesComputeShader.SetBuffer(0, "_Values", valueBuffer);
 
-        marchingCubesComputeShader.SetInt("_BoundSize", boundSize);
-        marchingCubesComputeShader.SetFloat("_Threshold", threshold);
-        marchingCubesComputeShader.SetFloat("_Step", resolution);
+        marchingCubesComputeShader.SetInt("_BoundSize", parameters.boundSize);
+        marchingCubesComputeShader.SetFloat("_Threshold", parameters.isoLevel);
+        marchingCubesComputeShader.SetFloat("_Step", parameters.step);
         valueBuffer.SetData(values);
         triangleBuffer.SetCounterValue(0);
 
-        int groups = boundSize / numThreads;
+        int groups = parameters.boundSize / numThreads;
         marchingCubesComputeShader.Dispatch(0, groups, groups, groups);
 
         Triangle[] triangles = new Triangle[ReadTriangleCount()];
@@ -104,6 +96,7 @@ public class MarchingCubesGPU : Marcher
         UnityEngine.Debug.ClearDeveloperConsole();
         UnityEngine.Debug.Log("Marching Cubes avg compute time " + avgMs + "ms");
 
+        ReleaseBuffers();
         return new ProceduralMeshInfo(triangles);
     }
 }

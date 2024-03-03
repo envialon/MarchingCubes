@@ -1,7 +1,7 @@
 #pragma kernel MarchCubes
 
 
-#include "../Marchers/TriangulationTable/TriangulationLookuptable.hlsl"
+#include "Includes/TriangulationLookuptable.hlsl"
 #include "Includes/HelperFunctions.compute"
 
 float _Threshold;
