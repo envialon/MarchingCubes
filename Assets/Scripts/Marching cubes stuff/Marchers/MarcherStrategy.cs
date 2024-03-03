@@ -4,24 +4,24 @@ using UnityEngine;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
-using System.Threading;
+using Unity.Collections.NotBurstCompatible;
 
 public struct ProceduralMeshInfo
 {
-    public Vector3[] meshVertices;
-    public int[] meshTriangles;
+    public NativeArray<float3> meshVertices;
+    public NativeArray<int> meshTriangles;
 
-    public ProceduralMeshInfo(List<Vector3> meshVertices, List<int> meshTriangles)
+    public ProceduralMeshInfo(NativeList<float3> meshVertices, NativeList<int> meshTriangles)
     {
-        this.meshVertices = meshVertices.ToArray();
-        this.meshTriangles = meshTriangles.ToArray();
+        this.meshVertices = meshVertices.AsArray();
+        this.meshTriangles = meshTriangles.AsArray();
     }
 
     public ProceduralMeshInfo(MarchingCubesGPU.Triangle[] triangles)
     {
         List<Vector3> meshVerticesList = new List<Vector3>();
         Dictionary<Vector3, int> vertexIndex = new Dictionary<Vector3, int>();
-        meshTriangles = new int[triangles.Length * 3];
+        meshTriangles = new NativeArray<int>(triangles.Length * 3, Allocator.Persistent);
 
         for (int i = 0; i < triangles.Length; i++)
         {
@@ -37,13 +37,17 @@ public struct ProceduralMeshInfo
             meshTriangles[index + 2] = vertexIndex[tri.c];
 
         }
-        meshVertices = meshVerticesList.ToArray(); ;
+        NativeArray<Vector3> vert = new NativeArray<Vector3>(meshVerticesList.ToArray(), Allocator.Persistent);
+        meshVertices = vert.Reinterpret<float3>();
+    }
+
+    public void DealocateMemory()
+    {
+        meshVertices.Dispose();
+        meshTriangles.Dispose();
     }
 
 }
-
-
-
 
 public class MarcherStrategy
 {
@@ -84,11 +88,10 @@ public class MarcherStrategy
 
     public MarcherStrategy(int boundSize, float step, float isoLevel, MarcherType marcherType = MarcherType.MarchingCubes)
     {
-        UpdateAttributes(boundSize,step, isoLevel, marcherType);
-      
+        UpdateAttributes(boundSize, step, isoLevel, marcherType);
         Initialize();
-
     }
+
     ~MarcherStrategy()
     {
         values.Dispose();
@@ -202,7 +205,7 @@ public class MarcherStrategy
     public void UpdateAttributes(int boundSize = 16, float step = 1f, float isoLevel = .5f, MarcherType marcherType = MarcherType.MarchingCubes)
     {
 
-        if(step <= 0) throw new System.Exception("step can't be set to values < 0.");
+        if (step <= 0) throw new System.Exception("step can't be set to values < 0.");
         if (boundSize <= 0) throw new System.Exception("boundSize can't be set to values < 0.");
         this.boundSize = boundSize;
         this.step = step;

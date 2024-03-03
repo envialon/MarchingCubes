@@ -419,9 +419,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: d2a263cad134c8d4498b9446d584e95b, type: 2}
-  marchingMethod: 0
+  type: 0
   interpolationMethod: 0
-  boundSize: 10
+  boundSize: 32
   resolution: 1
   threshold: 1
   opacity: 1

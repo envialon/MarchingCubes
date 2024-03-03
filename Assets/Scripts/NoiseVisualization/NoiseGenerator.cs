@@ -29,6 +29,10 @@ public static class NoiseGenerator
 
     public static float[] GetNoise(int boundSize, int numThreads = 8)
     {
+        if(boundSize <= 0) {
+            throw new System.Exception("boundSize can't be 0");
+        }
+
         CreateBuffers(boundSize);
         float[] noiseValues = new float[boundSize * boundSize * boundSize];
 

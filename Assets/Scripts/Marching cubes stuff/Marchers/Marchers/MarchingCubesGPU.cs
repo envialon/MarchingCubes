@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Threading;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -83,7 +82,7 @@ public class MarchingCubesGPU : Marcher
 
         int groups = parameters.boundSize / numThreads;
         marchingCubesComputeShader.Dispatch(0, groups, groups, groups);
-
+        
         Triangle[] triangles = new Triangle[ReadTriangleCount()];
         triangleBuffer.GetData(triangles);
 
@@ -96,7 +95,10 @@ public class MarchingCubesGPU : Marcher
         UnityEngine.Debug.ClearDeveloperConsole();
         UnityEngine.Debug.Log("Marching Cubes avg compute time " + avgMs + "ms");
 
+        ProceduralMeshInfo meshInfo = new ProceduralMeshInfo(triangles);
+
+
         ReleaseBuffers();
-        return new ProceduralMeshInfo(triangles);
+        return meshInfo;
     }
 }

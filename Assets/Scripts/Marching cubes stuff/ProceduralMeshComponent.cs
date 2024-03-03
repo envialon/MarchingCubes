@@ -78,9 +78,10 @@ public class ProceduralMeshComponent : MonoBehaviour
     {
         mesh.Clear();
         marcherStrategy.UpdateAttributes(boundSize, resolution, threshold, (MarcherStrategy.MarcherType)type);
-        ProceduralMeshInfo meshInfo = marcherStrategy.March();
-        mesh.vertices = meshInfo.meshVertices;
-        mesh.triangles = meshInfo.meshTriangles;
+        ProceduralMeshInfo meshInfo = marcherStrategy.March();        
+        mesh.vertices = meshInfo.meshVertices.Reinterpret<Vector3>().ToArray();
+        mesh.triangles = meshInfo.meshTriangles.ToArray();
+        meshInfo.DealocateMemory();        
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
         meshFilter.mesh = mesh;

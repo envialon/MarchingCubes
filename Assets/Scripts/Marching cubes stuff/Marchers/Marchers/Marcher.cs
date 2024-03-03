@@ -17,6 +17,5 @@ public abstract class Marcher
         public InterpolationMethod interpolationMethod;
     }
 
-
     public abstract ProceduralMeshInfo March(in NativeArray<float> values, MarcherParams parameters);
 }
