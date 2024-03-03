@@ -61,9 +61,11 @@ public abstract class Marcher
     public int boundSize;
     public float resolution;
     public float threshold;
+
     public InterpolationMethod interpolationMethod;
     public NativeArray<float> values;
 
+    private static TriangulationLookupTable triangulationTable;
 
 
     public void InitializeValues(float defaultValue = 0)
@@ -97,6 +99,9 @@ public abstract class Marcher
         this.resolution = resolution;
         this.threshold = interpolationThreshold;
         this.interpolationMethod = method;
+
+        triangulationTable = new TriangulationLookupTable();
+
         InitializeValues();
     }
 
@@ -109,7 +114,6 @@ public abstract class Marcher
         this.resolution = other.resolution;
         this.threshold  = other.threshold;  
         this.interpolationMethod = other.interpolationMethod;
-
     }
 
     ~Marcher()
@@ -304,7 +308,7 @@ public abstract class Marcher
     {
         float3[] edgeVertices = new float3[12];
 
-        int edgeIndex = TriangulationLookupTable.edgeTable[configurationIndex];
+        int edgeIndex = triangulationTable.edgeTable[configurationIndex];
 
         // Its either full or empty
         if (edgeIndex == 0)
@@ -368,12 +372,12 @@ public abstract class Marcher
     {
         int numberOfTriangles = 0;
         ;
-        for (int i = 0; TriangulationLookupTable.GetTriTable(index, i) != -1; i += 3)
+        for (int i = 0; triangulationTable.GetTriTable(index, i) != -1; i += 3)
         {
 
-            int index1 = TriangulationLookupTable.GetTriTable(index, i);
-            int index2 = TriangulationLookupTable.GetTriTable(index, i + 1);
-            int index3 = TriangulationLookupTable.GetTriTable(index, i + 2);
+            int index1 = triangulationTable.GetTriTable(index, i);
+            int index2 = triangulationTable.GetTriTable(index, i + 1);
+            int index3 = triangulationTable.GetTriTable(index, i + 2);
 
             if (!meshVerticesIndices.ContainsKey(vertices[index1]))
             {

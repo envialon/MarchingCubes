@@ -52,18 +52,7 @@ public class ProceduralMeshComponent : MonoBehaviour
     {
         if (marcher is null)
         {
-            switch (marchingMethod)
-            {
-                case MarchingMethod.MarchingCubes:
-                    marcher = new MarchingCubes(boundSize, resolution, threshold, interpolationMethod);
-                    break;
-                case MarchingMethod.MarchingSelectiveCubes:
-                    marcher = new MarchingSelectiveCubes(boundSize, resolution, threshold, interpolationMethod);
-                    break;
-                case MarchingMethod.MarchingGPU:
-                    marcher = new MarchingCubesGPU(boundSize, resolution, threshold, interpolationMethod);
-                    break;
-            }
+            marcher = new MarchingCubes(boundSize, resolution, threshold, interpolationMethod);
         }
         else
         {
@@ -72,9 +61,9 @@ public class ProceduralMeshComponent : MonoBehaviour
                 case MarchingMethod.MarchingCubes:
                     marcher = new MarchingCubes(marcher);
                     break;
-                case MarchingMethod.MarchingSelectiveCubes:
-                    marcher = new MarchingSelectiveCubes(marcher);
-                    break;
+                //case MarchingMethod.MarchingSelectiveCubes:
+                //    marcher = new MarchingSelectiveCubes(marcher);
+                //    break;
                 case MarchingMethod.MarchingGPU:
                     marcher = new MarchingCubesGPU(marcher);
                     break;

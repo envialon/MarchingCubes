@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class MarchingCubes : Marcher
 {
@@ -32,7 +30,7 @@ public class MarchingCubes : Marcher
         float3[] window = new float3[8];
         float[] valueWindow = new float[8];
 
-       
+
 
         Stopwatch sw = new Stopwatch();
         sw.Start();
@@ -41,7 +39,7 @@ public class MarchingCubes : Marcher
             for (int j = -1; j < boundSize; j++)
             {
                 for (int k = -1; k < boundSize; k++)
-{
+                {
                     window[0] = new Vector3(i, j, k);
                     window[1] = new Vector3(i + 1, j, k);
                     window[2] = new Vector3(i + 1, j + 1, k);
@@ -60,13 +58,13 @@ public class MarchingCubes : Marcher
                     valueWindow[6] = GetValue(window[6], values);
                     valueWindow[7] = GetValue(window[7], values);
 
-                    window[0] +=resolution;
-                    window[1] +=resolution;
-                    window[2] +=resolution;
-                    window[3] +=resolution;
-                    window[4] +=resolution;
-                    window[5] +=resolution;
-                    window[6] +=resolution;
+                    window[0] += resolution;
+                    window[1] += resolution;
+                    window[2] += resolution;
+                    window[3] += resolution;
+                    window[4] += resolution;
+                    window[5] += resolution;
+                    window[6] += resolution;
                     window[7] += resolution;
 
 
