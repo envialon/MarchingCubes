@@ -6,7 +6,7 @@
 
 float _Threshold;
 
-float _Step;
+int _Step;
 
 StructuredBuffer<float> _Values;
 

@@ -12,7 +12,7 @@ public abstract class Marcher
     public struct MarcherParams
     {
         public int boundSize;
-        public float step;
+        public int step;
         public float isoLevel;
         public InterpolationMethod interpolationMethod;
     }

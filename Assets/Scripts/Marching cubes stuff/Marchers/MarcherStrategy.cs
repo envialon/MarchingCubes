@@ -64,7 +64,7 @@ public class MarcherStrategy
 
 
     public int boundSize;
-    public float step;
+    public int step;
     public float isoLevel;
 
 
@@ -86,7 +86,7 @@ public class MarcherStrategy
         };
     }
 
-    public MarcherStrategy(int boundSize, float step, float isoLevel, MarcherType marcherType = MarcherType.MarchingCubes)
+    public MarcherStrategy(int boundSize, int step, float isoLevel, MarcherType marcherType = MarcherType.MarchingCubes)
     {
         UpdateAttributes(boundSize, step, isoLevel, marcherType);
         Initialize();
@@ -202,7 +202,7 @@ public class MarcherStrategy
     }
     #endregion
 
-    public void UpdateAttributes(int boundSize = 16, float step = 1f, float isoLevel = .5f, MarcherType marcherType = MarcherType.MarchingCubes)
+    public void UpdateAttributes(int boundSize = 16, int step = 1, float isoLevel = .5f, MarcherType marcherType = MarcherType.MarchingCubes)
     {
 
         if (step <= 0) throw new System.Exception("step can't be set to values < 0.");

@@ -75,8 +75,8 @@ public class MarchingCubesGPU : Marcher
         marchingCubesComputeShader.SetBuffer(0, "_Values", valueBuffer);
 
         marchingCubesComputeShader.SetInt("_BoundSize", parameters.boundSize);
+        marchingCubesComputeShader.SetInt("_Step", parameters.step);
         marchingCubesComputeShader.SetFloat("_Threshold", parameters.isoLevel);
-        marchingCubesComputeShader.SetFloat("_Step", parameters.step);
         valueBuffer.SetData(values);
         triangleBuffer.SetCounterValue(0);
 

@@ -30,7 +30,7 @@ public class ProceduralMeshComponent : MonoBehaviour
     public MarcherStrategy marcherStrategy;
 
     public int boundSize;
-    public float resolution;
+    public int step =1;
     public float threshold;
     public float opacity;
 
@@ -39,7 +39,7 @@ public class ProceduralMeshComponent : MonoBehaviour
     private void InitializeMarcher()
     {
 
-        marcherStrategy = new MarcherStrategy(boundSize, resolution, threshold, (MarcherStrategy.MarcherType)type);
+        marcherStrategy = new MarcherStrategy(boundSize, step, threshold, (MarcherStrategy.MarcherType)type);
     }
 
    
@@ -77,7 +77,7 @@ public class ProceduralMeshComponent : MonoBehaviour
     public void GenerateMesh()
     {
         mesh.Clear();
-        marcherStrategy.UpdateAttributes(boundSize, resolution, threshold, (MarcherStrategy.MarcherType)type);
+        marcherStrategy.UpdateAttributes(boundSize, step, threshold, (MarcherStrategy.MarcherType)type);
         ProceduralMeshInfo meshInfo = marcherStrategy.March();        
         mesh.vertices = meshInfo.meshVertices.Reinterpret<Vector3>().ToArray();
         mesh.triangles = meshInfo.meshTriangles.ToArray();
